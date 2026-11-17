@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lost in the Woods · The Valley</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#d9cdb4">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/lost.jpg" as="image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f6f0e2;
+      --paper-deep: #ece3cd;
+      --ink: #2c2720;
+      --ink-soft: #4a4136;
+      --muted: #7a6f5d;
+      --rule: #cdbf9f;
+      --accent: #a14a24;
+      --board: #7a5a3c;
+      --board-text: #f2e6cc;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    html { background: #d9cdb4; }
+    body { color: var(--ink); font-family: "EB Garamond", Georgia, serif; font-size: 1.12rem; line-height: 1.6; }
+    a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+    /* A still from the valley itself, with haze drifting over it */
+    .scene { position: fixed; inset: -2%; background: #c9c3b0 url(/lost.jpg) center / cover no-repeat; transform: scale(1.04); animation: breathe 40s ease-in-out infinite alternate; }
+    @keyframes breathe { to { transform: scale(1.09) translate(-1%, -.5%); } }
+    .haze {
+      position: fixed; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 30% at 20% 65%, rgba(236, 228, 210, .5), transparent 70%),
+        radial-gradient(ellipse 50% 25% at 75% 55%, rgba(236, 228, 210, .38), transparent 70%),
+        linear-gradient(to bottom, rgba(246, 240, 226, .18), transparent 40%, rgba(40, 52, 32, .25));
+      animation: drift 30s ease-in-out infinite alternate;
+    }
+    @keyframes drift { from { transform: translateX(-3%); } to { transform: translateX(3%); } }
+    .mote { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: rgba(255, 246, 214, .9); box-shadow: 0 0 6px 2px rgba(255, 240, 200, .5);
+      opacity: 0; animation: float 9s ease-in-out infinite; pointer-events: none; }
+    @keyframes float { 0%, 100% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .85; } 70% { opacity: .5; transform: translate(18px, -26px); } }
+
+    main { position: relative; z-index: 2; min-height: 100vh; display: flex; align-items: center; padding: 9vh 0; }
+    .panel {
+      width: min(500px, calc(100% - 32px)); margin-left: clamp(16px, 6vw, 96px);
+      background: color-mix(in srgb, var(--paper) 94%, transparent);
+      border: 1px solid var(--rule); border-radius: 4px; padding: 30px 34px 26px;
+      box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 18px 50px rgba(40, 30, 15, .22);
+      animation: arrive .9s ease both .2s;
+    }
+    @keyframes arrive { from { opacity: 0; transform: translateY(24px); } }
+    .place { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: .14em; color: var(--muted); font-size: .9rem; margin: 0 0 .2rem; }
+    h1 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 2.3rem; line-height: 1.1; margin: 0 0 1rem; letter-spacing: -.005em; }
+    p { margin: 0 0 .9rem; }
+    .lede { font-style: italic; color: var(--ink-soft); }
+    .meta { font-size: .95rem; color: var(--muted); font-style: italic; word-break: break-all; }
+    .meta code { font-family: inherit; color: var(--ink-soft); }
+
+    /* The same painted arms as the signposts along the valley's roads */
+    .signpost { position: relative; margin: 1.4rem 0 .4rem; padding: .2rem 0 .6rem 18px; border-top: 1px solid color-mix(in srgb, var(--rule) 70%, transparent); }
+    .signpost::before { content: ""; position: absolute; left: 6px; top: .9rem; bottom: 0; width: 7px; border-radius: 2px; background: linear-gradient(90deg, #5a4430, #6b4f36 50%, #5a4430); }
+    .arm {
+      position: relative; display: block; width: fit-content; min-width: 13.5rem; margin: .7rem 0 0; padding: .32rem 2.1rem .32rem .9rem;
+      font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: 1.1rem; color: var(--board-text); text-decoration: none;
+      background: var(--board); clip-path: polygon(0 0, calc(100% - 1.1rem) 0, 100% 50%, calc(100% - 1.1rem) 100%, 0 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12); transition: background .25s ease, transform .25s ease;
+    }
+    .arm:nth-child(2) { transform: rotate(-1.5deg); }
+    .arm:nth-child(3) { transform: rotate(1deg); }
+    .arm:hover, .arm:focus-visible { background: var(--accent); transform: translateX(4px); outline: none; }
+    .arm.astray { background: #8c7356; color: #e6dac0; cursor: help; }
+    .arm.astray:hover { background: #8c7356; transform: none; }
+    .small { font-size: .9rem; color: var(--muted); margin: 1rem 0 0; }
+
+    @media (max-width: 720px) {
+      body { font-size: 1.04rem; }
+      main { align-items: flex-end; padding: 40vh 0 6vh; }
+      .panel { margin: 0 auto; padding: 22px 20px; }
+      h1 { font-size: 1.9rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .scene, .haze, .mote, .panel { animation: none; }
+      .mote { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true"></div>
+  <div class="haze" aria-hidden="true"></div>
+
+  <main>
+    <article class="panel">
+      <p class="place">Off the Road</p>
+      <h1>Lost in the Woods</h1>
+      <p class="lede">The path you followed ran out among the trees. No settlement stands here, and the birds have gone quiet.</p>
+      <p class="meta">You were looking for <code id="where">this page</code>, but it could not be found.</p>
+      <nav class="signpost" aria-label="Ways out of the woods">
+        <a class="arm" href="/">Back to the Valley</a>
+        <a class="arm" href="/#stop-projects">The Mills</a>
+        <a class="arm" href="/#stop-contact">The Coast at Nightfall</a>
+        <span class="arm astray" title="Not that way">Deeper In</span>
+      </nav>
+      <p class="small">Error 404</p>
+    </article>
+  </main>
+
+  <script>
+    (function () {
+      var path = decodeURIComponent(location.pathname + location.search);
+      if (path && path !== '/404.html') document.getElementById('where').textContent = path.length > 70 ? path.slice(0, 67) + '…' : path;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      for (var i = 0; i < 14; i++) {
+        var m = document.createElement('span');
+        m.className = 'mote';
+        m.setAttribute('aria-hidden', 'true');
+        m.style.left = (35 + Math.random() * 60) + '%';
+        m.style.top = (20 + Math.random() * 65) + '%';
+        m.style.animationDelay = (Math.random() * 9) + 's';
+        m.style.animationDuration = (7 + Math.random() * 6) + 's';
+        document.body.appendChild(m);
+      }
+    })();
+  </script>
+</body>
+</html>

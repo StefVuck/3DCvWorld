@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="%LANG%">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>%NAME% · The Valley</title>
+  <meta name="description" content="%DESCRIPTION%">
+  <meta name="theme-color" content="#d9cdb4">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="%SITE_URL%">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="%NAME%">
+  <meta property="og:title" content="%NAME% · %TITLE%">
+  <meta property="og:description" content="%DESCRIPTION%">
+  <meta property="og:url" content="%SITE_URL%">
+  <meta property="og:image" content="%SITE_URL%og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A stone watchtower above a green river valley, with the title %NAME%, %TITLE%.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="%NAME% · %TITLE%">
+  <meta name="twitter:description" content="%DESCRIPTION%">
+  <meta name="twitter:image" content="%SITE_URL%og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f6f0e2;
+      --paper-deep: #ece3cd;
+      --ink: #2c2720;
+      --ink-soft: #4a4136;
+      --muted: #7a6f5d;
+      --rule: #cdbf9f;
+      --accent: #a14a24;
+      --moss: #5f6f42;
+    }
+    * { box-sizing: border-box; }
+    html.lenis, html.lenis body { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto !important; }
+    html { background: #d9cdb4; }
+    body { margin: 0; color: var(--ink); font-family: "EB Garamond", Georgia, serif; font-size: 1.12rem; line-height: 1.6; }
+    a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    h1, h2, h3 { font-family: "IM Fell English", Georgia, serif; font-weight: 400; margin: 0; letter-spacing: -0.005em; }
+
+    .stage { position: fixed; inset: 0; z-index: 0; }
+    .stage canvas { width: 100%; height: 100%; display: block; }
+
+    .loading {
+      position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; text-align: center;
+      background: var(--paper); transition: opacity 1.4s ease;
+    }
+    .loading h1 { font-size: clamp(2rem, 6vw, 3.4rem); }
+    .loading p { font-style: italic; color: var(--muted); margin: .5rem 0 0; }
+    body.ready .loading { opacity: 0; pointer-events: none; }
+
+    main { position: relative; z-index: 5; }
+    .stop { min-height: 100vh; padding: 9vh 0; display: flex; align-items: center; }
+    .passage { height: 100vh; }
+    .panel {
+      width: min(500px, calc(100% - 32px));
+      margin-left: clamp(16px, 6vw, 96px);
+      background: color-mix(in srgb, var(--paper) 94%, transparent);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 30px 34px 26px;
+      box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 18px 50px rgba(40, 30, 15, .22);
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .9s ease, transform .9s ease;
+    }
+    .panel.seen { opacity: 1; transform: none; }
+    .panel.side-right { margin-left: auto; margin-right: clamp(16px, 6vw, 96px); }
+    .panel .place { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: .14em; color: var(--muted); font-size: .9rem; margin: 0 0 .2rem; }
+    .panel h2 { font-size: 2.3rem; line-height: 1.1; margin-bottom: 1rem; }
+    .panel h3 { font-size: 1.3rem; line-height: 1.25; }
+    .panel p { margin: 0 0 .9rem; }
+    .entry { padding: .9rem 0; border-top: 1px solid color-mix(in srgb, var(--rule) 70%, transparent); }
+    .entry:first-of-type { border-top: 0; padding-top: 0; }
+    .entry header { margin-bottom: .35rem; }
+    .meta { font-size: .95rem; color: var(--muted); font-style: italic; margin: .1rem 0 0 !important; }
+    .entry ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+    .entry li { margin-bottom: .25rem; }
+    .entry li::marker { content: "\2766  "; color: var(--accent); font-size: .78em; }
+    .workshops { display: grid; }
+    .project { border-top: 1px solid color-mix(in srgb, var(--rule) 70%, transparent); }
+    .project summary { list-style: none; cursor: pointer; padding: .45rem 0 .45rem 1.2rem; position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .5rem; }
+    .project summary::-webkit-details-marker { display: none; }
+    .project summary::before { content: "\2766"; position: absolute; left: 0; top: .5rem; color: var(--accent); font-size: .78em; transition: transform .3s ease; }
+    .project[open] summary::before { transform: rotate(90deg); }
+    .project .name { font-family: "IM Fell English", Georgia, serif; font-size: 1.15rem; }
+    .project summary:hover .name, .project summary:focus-visible .name { color: var(--accent); }
+    .project .meta { flex-basis: 100%; font-size: .88rem; }
+    .project .badge { margin-left: 0; }
+    .project > p { margin: 0 0 .6rem 1.2rem; font-size: .98rem; }
+    .with-arms { display: grid; grid-template-columns: 40px 1fr; gap: 16px; }
+    .arms { width: 40px; height: 48px; margin-top: 4px; }
+    .stalls { display: grid; gap: 1rem; }
+    /* Writing, pencilled in the margin of the entry it is about */
+    .margin-note { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .45rem; margin: .55rem 0 0; padding-left: .2rem;
+      font-size: .88rem; font-style: italic; line-height: 1.4; color: var(--muted); }
+    .margin-note::before { content: "\270E"; font-style: normal; color: var(--accent); margin-right: .1rem; }
+    .margin-note a { color: var(--ink-soft); text-decoration-style: dotted; }
+    .margin-note .note-time { font-size: .92em; }
+    .margin-note .visit { margin: 0 0 0 .1rem; padding: .02rem .5rem; font-size: .76rem; }
+    .stall h3 { display: flex; align-items: center; gap: 10px; margin-bottom: .4rem; }
+    .pennant { width: 34px; height: 22px; }
+    .wares { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+    .wares li { font-size: .95rem; padding: .05rem .55rem; border: 1px solid var(--rule); border-radius: 2px; background: var(--paper-deep); }
+    .badge { font-family: "IM Fell English SC", Georgia, serif; font-size: .78rem; letter-spacing: .08em; color: var(--moss); border: 1px solid var(--moss); padding: 0 .4rem; margin-left: .5rem; vertical-align: middle; border-radius: 2px; }
+    .note { font-size: .92rem; color: var(--muted); font-style: italic; }
+    .lede { font-style: italic; color: var(--ink-soft); }
+    .entry .honours { list-style: none; margin: .25rem 0 0; padding: 0; display: grid; grid-template-columns: max-content 1fr; gap: .2rem .9rem; font-size: .96rem; line-height: 1.4; }
+    .honours li { display: contents; }
+    .honours li::marker { content: none; }
+    .honours .name { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: .04em; color: var(--ink); }
+    .honours .name + span { color: var(--ink-soft); }
+    .countries { list-style: none; padding: 0; margin: .4rem 0 1rem; display: flex; flex-wrap: wrap; gap: .3rem .9rem; }
+    .countries li { cursor: default; }
+    .countries li:hover, .countries li:focus-visible { color: var(--accent); outline: none; }
+    .countries.wishlist li { color: var(--muted); border-bottom: 1px dotted var(--muted); }
+    .links { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .35rem; }
+    .links .label { font-family: "IM Fell English SC", Georgia, serif; color: var(--muted); letter-spacing: .08em; display: inline-block; width: 6.5rem; }
+    .farewell { font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: 1.4rem; margin-top: 1.4rem !important; }
+    .small { font-size: .9rem; color: var(--muted); }
+    .visitors { font-style: italic; margin: 0 0 .2rem !important; }
+
+    .stop-hero { min-height: 100vh; padding: 0; align-items: flex-start; justify-content: center; }
+    .stop-hero .panel {
+      margin: 13vh auto 0; text-align: center; background: none; border: 0; box-shadow: none; width: min(760px, calc(100% - 32px));
+    }
+    .stop-hero h1 { font-size: clamp(2.8rem, 8vw, 5.6rem); line-height: 1; color: #2a241d; text-shadow: 0 0 30px rgba(255,248,232,.8), 0 0 2px rgba(255,248,232,.9); }
+    .stop-hero .kicker { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: .16em; color: #4f463a; margin-bottom: .6rem; text-shadow: 0 0 14px rgba(255,248,232,.9); }
+    .stop-hero .title { font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: clamp(1.2rem, 2.6vw, 1.7rem); margin: .8rem 0 .3rem; text-shadow: 0 0 18px rgba(255,248,232,.9); }
+    .stop-hero .tagline { color: #3e362c; text-shadow: 0 0 16px rgba(255,248,232,.95); }
+    .stop-hero .cue { margin-top: 2.2rem; font-style: italic; color: #4f463a; text-shadow: 0 0 14px rgba(255,248,232,.9); animation: bob 2.6s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(6px); } }
+
+    .minimap { position: fixed; right: 16px; bottom: 16px; z-index: 10; width: 300px; height: 96px; box-shadow: 0 8px 24px rgba(40,30,15,.25); opacity: 0; transition: opacity 1s ease 1s; }
+    body.ready .minimap { opacity: 1; }
+    .minimap canvas { width: 300px; height: 96px; display: block; border-radius: 2px; }
+    .minimap .markers { position: absolute; inset: 0; }
+    .marker {
+      position: absolute; transform: translate(-50%, -50%); width: 20px; height: 20px; border-radius: 50%;
+      border: 1px solid var(--ink-soft); background: var(--paper); color: var(--ink); cursor: pointer; padding: 0;
+      font: 12px/18px "IM Fell English", Georgia, serif;
+    }
+    .marker.on, .marker:hover, .marker:focus-visible { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+
+    .visit {
+      display: inline-block; margin: .35rem 0 .2rem; padding: .15rem .7rem; font: .85rem "IM Fell English SC", Georgia, serif;
+      letter-spacing: .06em; color: var(--accent); background: none; border: 1px solid var(--accent); border-radius: 2px; flex-basis: auto; cursor: pointer;
+    }
+    .visit:hover, .visit:focus-visible { background: var(--accent); color: var(--paper); outline: none; }
+    .project summary .visit { margin-top: .3rem; }
+    .visit-back { display: none; }
+    body.visiting .visit-back {
+      display: block; position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 12; padding: .55rem 1.2rem;
+      font: 1rem "IM Fell English SC", Georgia, serif; letter-spacing: .06em; color: var(--paper); background: var(--accent);
+      border: 0; border-radius: 3px; box-shadow: 0 8px 24px rgba(40,30,15,.3); cursor: pointer;
+    }
+    .panel { transition: opacity .6s ease, transform .9s ease; }
+    body.visiting .panel, body.jumping .panel { opacity: 0 !important; pointer-events: none; }
+    body.jumping .panel { transform: translateY(24px); }
+    .stop { cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+    .stop .panel { cursor: auto; user-select: text; -webkit-user-select: text; }
+    .stop-hero .panel { pointer-events: none; user-select: none; -webkit-user-select: none; }
+    body.orbiting, body.orbiting .stop { cursor: grabbing; }
+    .orbit-hint { font-size: .85rem; color: var(--muted); font-style: italic; margin: .2rem 0 0 !important; }
+    .sound-toggle {
+      position: fixed; right: 16px; bottom: 124px; z-index: 10; display: flex; align-items: center; gap: .45rem; padding: .35rem .75rem .35rem .6rem;
+      border: 1px solid var(--rule); border-radius: 999px; background: color-mix(in srgb, var(--paper) 94%, transparent); color: var(--ink-soft);
+      font: .85rem "IM Fell English SC", Georgia, serif; letter-spacing: .05em; cursor: pointer; box-shadow: 0 6px 18px rgba(40,30,15,.18);
+      opacity: 0; transition: opacity 1s ease 1s;
+    }
+    body.ready .sound-toggle { opacity: 1; }
+    .sound-toggle svg { width: 18px; height: 18px; }
+    .sound-toggle .waves { opacity: .25; transition: opacity .4s ease; }
+    .sound-toggle[aria-pressed="true"] .waves { opacity: 1; }
+    .sound-toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+    .inscription {
+      position: fixed; z-index: 4; top: 11vh; right: clamp(24px, 6vw, 110px); width: min(30vw, 440px); margin: 0; text-align: right;
+      pointer-events: none; color: #2a241d; opacity: 0; transform: translateY(10px); filter: blur(2px);
+      transition: opacity 1.4s ease, transform 1.6s ease, filter 1.4s ease;
+    }
+    .inscription.shown { opacity: 1; transform: none; filter: none; }
+    .inscription::before {
+      content: ""; position: absolute; inset: -12% -14% -18% -22%; z-index: -1; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(246,240,226,.82), rgba(246,240,226,.55) 55%, rgba(246,240,226,0));
+      filter: blur(6px);
+    }
+    .inscription blockquote {
+      margin: 0; font: italic 400 clamp(1.25rem, 1.9vw, 1.75rem)/1.3 "IM Fell English", Georgia, serif;
+      text-shadow: 0 0 24px rgba(255,248,232,.95), 0 0 6px rgba(255,248,232,.9), 0 0 2px rgba(255,248,232,1);
+    }
+    .inscription blockquote::before {
+      content: "\201C"; display: block; height: .45em; font-size: 2.6em; line-height: 1; color: var(--accent); opacity: .55;
+      text-shadow: none;
+    }
+    .inscription figcaption {
+      margin-top: .6rem; font: .88rem "IM Fell English SC", Georgia, serif; letter-spacing: .12em; color: #4f463a;
+      text-shadow: 0 0 14px rgba(255,248,232,.95), 0 0 3px rgba(255,248,232,1);
+    }
+    .inscription figcaption::before { content: ""; display: inline-block; width: 28px; height: 1px; background: currentColor; vertical-align: middle; margin-right: .6rem; opacity: .6; }
+    body.visiting .inscription { opacity: 0; }
+    .day-compass {
+      position: fixed; left: 20px; bottom: 20px; z-index: 11; width: 132px; height: 132px; opacity: 0; transform: scale(.6) rotate(-40deg);
+      transition: opacity 1.2s ease, transform 1.4s cubic-bezier(.2,.9,.3,1.2);
+    }
+    .day-compass.shown { opacity: 1; transform: none; }
+    .day-compass .dial { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; filter: drop-shadow(0 8px 18px rgba(40,30,15,.35)); }
+    .day-compass .dial:active { cursor: grabbing; }
+    .day-compass .dial:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 50%; }
+    .day-compass .needle { transform-origin: 66px 66px; transition: transform .25s ease-out; }
+    .day-compass.fresh .needle { animation: settle 2.4s ease-out; }
+    @keyframes settle { 0% { transform: rotate(-200deg); } 70% { transform: rotate(20deg); } 100% { transform: rotate(0); } }
+    .day-compass .coin { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.3,.7,.3,1.15); }
+    .day-compass.flipped .coin { transform: rotateY(180deg); }
+    .day-compass .coin .dial { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+    .day-compass .coin .back { transform: rotateY(180deg); }
+    .day-compass .back [class^="season-"] { opacity: .5; transition: opacity .4s ease; }
+    .day-compass .back [class^="season-"].picked { opacity: 1; }
+    .day-compass .back .month { transition: fill .3s ease; }
+    .day-compass .back .month.picked { fill: #a14a24; font-weight: bold; }
+    .day-compass .cap { cursor: pointer; }
+    .day-compass .crown { position: absolute; left: 50%; top: -19px; width: 28px; height: 26px; margin-left: -14px; padding: 0; border: 0; background: none; cursor: pointer; z-index: 1;
+      filter: drop-shadow(0 2px 3px rgba(40,30,15,.35)); transition: transform .12s ease; }
+    .day-compass .crown svg { width: 100%; height: 100%; display: block; }
+    .day-compass .crown:hover { transform: translateY(-2px); }
+    .day-compass .crown:active { transform: translateY(3px); }
+    .day-compass .crown:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    body.over-binnacle, body.over-binnacle .stop { cursor: pointer; }
+    body.visiting .day-compass { opacity: .35; }
+    .map-toggle { display: none; }
+    body.walking #journey, body.walking .inscription, body.walking .visit-back { display: none; }
+    body.walking { overflow: hidden; }
+    body.walking .stage { touch-action: none; }
+    /* Every floating note, hint and speech bubble shares one parchment look */
+    .note, .speech, .chat {
+      background: color-mix(in srgb, var(--paper) 94%, transparent); border: 1px solid var(--rule); border-radius: 6px;
+      box-shadow: 0 8px 22px rgba(40,30,15,.2); color: var(--ink-soft);
+    }
+    .note[hidden], .speech[hidden], .chat[hidden], .walk-dest[hidden] { display: none; }
+    .note {
+      position: fixed; left: 50%; top: 16px; z-index: 13; width: max-content; max-width: min(520px, calc(100% - 32px));
+      display: flex; gap: .8rem; align-items: center; padding: .5rem .55rem .5rem 1rem; font-size: .92rem; line-height: 1.45; font-style: italic;
+      opacity: 0; transform: translate(-50%, -8px); transition: opacity .7s ease, transform .7s ease;
+    }
+    .note.shown { opacity: 1; transform: translate(-50%, 0); }
+    .note p { margin: 0; }
+    .note-mark { color: var(--accent); font-style: normal; }
+    .note-button {
+      font: .82rem "IM Fell English SC", Georgia, serif; letter-spacing: .05em; white-space: nowrap; color: var(--accent);
+      background: none; border: 1px solid var(--rule); border-radius: 3px; padding: .3rem .65rem; cursor: pointer; transition: border-color .2s ease;
+    }
+    .note-button:hover, .note-button:focus-visible { border-color: var(--accent); outline: none; }
+    .note-button.quiet { border-color: transparent; color: var(--muted); font-size: 1.05rem; line-height: 1; padding: .2rem .45rem; }
+    .note kbd { font: inherit; font-style: normal; font-size: .82em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; padding: 0 .3em; margin: 0 .1em; background: var(--paper); }
+    body.walking .rumour, body.walking .gecko-note { display: none; }
+    .speech, .chat { position: fixed; left: 0; top: 0; margin: 0; pointer-events: none; opacity: 0; transition: opacity .4s ease; will-change: transform; }
+    .speech.shown, .chat.shown { opacity: 1; }
+    .speech::after, .chat::after {
+      content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px; background: inherit;
+      border-right: inherit; border-bottom: inherit; transform: rotate(45deg);
+    }
+    .speech { z-index: 11; max-width: min(320px, calc(100vw - 32px)); padding: .5rem .8rem .55rem; }
+    .speech figcaption { font: .72rem "IM Fell English SC", Georgia, serif; letter-spacing: .08em; color: var(--muted); margin-bottom: .15rem; }
+    .speech blockquote { margin: 0; font-size: .95rem; line-height: 1.4; color: var(--ink); }
+    .chat { z-index: 10; max-width: 230px; padding: .3rem .7rem; font-size: .86rem; line-height: 1.35; font-style: italic; box-shadow: 0 5px 14px rgba(40,30,15,.16); }
+    .explore {
+      display: inline-block; margin: .2rem 0 1rem; padding: .45rem 1.1rem; font: 1rem "IM Fell English SC", Georgia, serif; letter-spacing: .06em;
+      color: var(--paper); background: var(--accent); border: 1px solid var(--accent); border-radius: 2px; cursor: pointer; transition: filter .2s ease;
+    }
+    .explore:hover, .explore:focus-visible { filter: brightness(1.1); }
+    .walk-dest { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 12; margin: 0; pointer-events: none;
+      font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: clamp(1.6rem, 4vw, 2.6rem); color: #f6f0e2;
+      text-shadow: 0 2px 14px rgba(30,20,10,.55); opacity: 0; transition: opacity .7s ease; }
+    .walk-dest.shown { opacity: 1; }
+    @media (max-width: 720px) {
+      .rumour, .gecko-note { top: auto; bottom: 62px; font-size: .86rem; transform: translate(-50%, 8px); }
+      .walk-hint { top: 10px; font-size: .85rem; }
+    }
+    .debug { position: fixed; left: 16px; bottom: 16px; z-index: 20; display: none; background: var(--paper); border: 1px solid var(--rule); padding: .7rem .9rem; font-size: .95rem; width: 300px; }
+    body.debug-on .debug { display: block; }
+    .debug .row { display: flex; gap: .5rem; align-items: center; margin-top: .3rem; }
+    .debug input[type=range] { flex: 1; }
+
+    @media (min-width: 721px) and (max-height: 800px) {
+      .stop { padding: 5vh 0; }
+      .panel { padding: 22px 30px 18px; }
+      .panel h2 { font-size: 2rem; margin-bottom: .6rem; }
+      .entry { padding: .7rem 0; }
+    }
+    @media (max-width: 720px) {
+      body { font-size: 1.04rem; }
+      .stop { align-items: flex-start; padding: 50vh 0 8vh; }
+      .stop-hero { padding: 0; }
+      .panel { margin: 0 auto !important; padding: 22px 20px; }
+      .panel h2 { font-size: 1.9rem; }
+      .minimap { right: 10px; bottom: 64px; transform: scale(.9); transform-origin: bottom right; visibility: hidden; }
+      .minimap.open { visibility: visible; }
+      .map-toggle {
+        display: block; position: fixed; right: 12px; bottom: 12px; z-index: 11; width: 46px; height: 46px; border-radius: 50%;
+        border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font: 13px "IM Fell English SC", Georgia, serif;
+        box-shadow: 0 6px 18px rgba(40,30,15,.25); opacity: 0; transition: opacity 1s ease 1s;
+      }
+      body.ready .map-toggle { opacity: 1; }
+      .sound-toggle { right: 66px; bottom: 15px; padding: .35rem .6rem; }
+      .day-compass { left: 10px; bottom: 10px; width: 92px; height: 92px; }
+      .day-compass .crown { width: 22px; height: 20px; margin-left: -11px; top: -15px; }
+      .inscription { top: 4vh; left: 16px; right: 16px; width: auto; text-align: center; }
+      .inscription blockquote { font-size: 1.12rem; }
+      .inscription blockquote::before { font-size: 2em; }
+      .inscription figcaption { font-size: .78rem; }
+      .sound-toggle .label { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .panel { transition: none; opacity: 1; transform: none; }
+      .stop-hero .cue { animation: none; }
+      .day-compass .coin { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" aria-hidden="true"></div>
+
+  <div class="loading" role="status">
+    <div>
+      <h1>The Valley</h1>
+      <p>Setting out</p>
+    </div>
+  </div>
+
+  <main id="journey"></main>
+
+  <figure class="inscription" aria-live="polite"><blockquote></blockquote><figcaption></figcaption></figure>
+  <div class="day-compass" hidden>
+    <button class="crown" type="button" aria-label="Turn the compass over">
+      <svg viewBox="0 0 24 22" aria-hidden="true">
+        <rect x="9" y="13" width="6" height="9" fill="url(#crown-brass)" stroke="#5a4418" stroke-width="1"/>
+        <rect x="3" y="2" width="18" height="12" rx="3" fill="url(#crown-brass)" stroke="#5a4418" stroke-width="1.2"/>
+        <path d="M7 4v8M10 4v8M14 4v8M17 4v8" stroke="#7d5f22" stroke-width="1" opacity=".7"/>
+        <defs><linearGradient id="crown-brass" x1="0" x2="1"><stop offset="0" stop-color="#7d5f22"/><stop offset=".45" stop-color="#e9c875"/><stop offset="1" stop-color="#8a6a28"/></linearGradient></defs>
+      </svg>
+    </button>
+    <div class="coin">
+    <svg class="dial" viewBox="0 0 132 132" role="slider" tabindex="0" aria-label="Time of day" aria-valuemin="0" aria-valuemax="360" aria-valuenow="0">
+      <defs>
+        <radialGradient id="brass" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#e9c875"/><stop offset=".6" stop-color="#b8913a"/><stop offset="1" stop-color="#7d5f22"/></radialGradient>
+      </defs>
+      <circle cx="66" cy="66" r="63" fill="url(#brass)" stroke="#5a4418" stroke-width="1.5"/>
+      <circle cx="66" cy="66" r="53" fill="#f3ead6" stroke="#7d5f22" stroke-width="1.2"/>
+      <g stroke="#7a6a4a" stroke-width="1">
+        <path d="M66 15v6M66 111v6M15 66h6M111 66h6"/>
+        <path d="M102 30l-3 3M30 30l3 3M102 102l-3-3M30 102l3-3" opacity=".7"/>
+      </g>
+      <g stroke="#9a8a6a" stroke-width=".6" opacity=".5">
+        <path d="M66 66L66 22M66 66L66 110M66 66L22 66M66 66L110 66"/>
+      </g>
+      <g fill="#c98b2a" stroke="#8a5a14" stroke-width=".8"><circle cx="66" cy="29" r="5"/><path d="M66 20v-3M66 38v3M57 29h-3M75 29h3M60 23l-2-2M72 23l2-2M60 35l-2 2M72 35l2 2" fill="none"/></g>
+      <g fill="#d27a3a" stroke="#8a4a1a" stroke-width=".8"><path d="M95 69a8 8 0 0 1 16 0z"/><path d="M93 71h20" fill="none"/></g>
+      <path d="M71 98a8 8 0 1 1-6-12a6.5 6.5 0 1 0 6 12z" fill="#3a4a6a"/>
+      <g fill="#e2a95a" stroke="#8a5a14" stroke-width=".8"><path d="M21 69a8 8 0 0 1 16 0z"/><path d="M19 71h20M29 59v-3" fill="none"/></g>
+      <g class="needle">
+        <path d="M66 24l5 42h-10z" fill="#8a2f2a"/>
+        <path d="M66 108l5-42h-10z" fill="#3a3026"/>
+      </g>
+      <circle class="cap" cx="66" cy="66" r="6" fill="url(#brass)" stroke="#5a4418"/>
+    </svg>
+    <svg class="dial back" viewBox="0 0 132 132" role="slider" tabindex="-1" aria-hidden="true" aria-label="Month" aria-valuemin="1" aria-valuemax="12">
+      <circle cx="66" cy="66" r="63" fill="url(#brass)" stroke="#5a4418" stroke-width="1.5"/>
+      <circle cx="66" cy="66" r="53" fill="#f3ead6" stroke="#7d5f22" stroke-width="1.2"/>
+      <g opacity=".22">
+        <path d="M66 66L28.5 28.5A53 53 0 0 1 103.5 28.5z" fill="#7d9ab8"/>
+        <path d="M66 66L103.5 28.5A53 53 0 0 1 103.5 103.5z" fill="#d79aae"/>
+        <path d="M66 66L103.5 103.5A53 53 0 0 1 28.5 103.5z" fill="#d9b04a"/>
+        <path d="M66 66L28.5 103.5A53 53 0 0 1 28.5 28.5z" fill="#b8642a"/>
+      </g>
+      <g stroke="#9a8a6a" stroke-width=".8" opacity=".7"><path d="M78.7 18.7L79.7 14.8 M100.6 31.4L103.5 28.5 M113.3 53.3L117.2 52.3 M113.3 78.7L117.2 79.7 M100.6 100.6L103.5 103.5 M78.7 113.3L79.7 117.2 M53.3 113.3L52.3 117.2 M31.4 100.6L28.5 103.5 M18.7 78.7L14.8 79.7 M18.7 53.3L14.8 52.3 M31.4 31.4L28.5 28.5 M53.3 18.7L52.3 14.8"/></g>
+      <g class="months" font-family="IM Fell English SC, Georgia, serif" font-size="8" text-anchor="middle" fill="#5a4a32">
+        <text class="month" x="66.0" y="22.6">J</text><text class="month" x="89.0" y="28.8">F</text><text class="month" x="105.8" y="45.6">M</text><text class="month" x="112.0" y="68.6">A</text><text class="month" x="105.8" y="91.6">M</text><text class="month" x="89.0" y="108.4">J</text><text class="month" x="66.0" y="114.6">J</text><text class="month" x="43.0" y="108.4">A</text><text class="month" x="26.2" y="91.6">S</text><text class="month" x="20.0" y="68.6">O</text><text class="month" x="26.2" y="45.6">N</text><text class="month" x="43.0" y="28.8">D</text>
+      </g>
+      <g class="season-winter" transform="translate(66 40) scale(.62) translate(-66 -29)" stroke="#4a6688" stroke-width="1.6" stroke-linecap="round" fill="none">
+        <path d="M66 20v18M58.2 24.5l15.6 9M58.2 33.5l15.6-9M63 21.5l3 2.5 3-2.5M63 36.5l3-2.5 3 2.5"/>
+      </g>
+      <g class="season-spring" transform="translate(92 66) scale(.62) translate(-103 -66)" fill="#e3a3b8" stroke="#a0566e" stroke-width=".7">
+        <circle cx="103" cy="60.5" r="3.6"/><circle cx="108.2" cy="64.3" r="3.6"/><circle cx="106.2" cy="70.4" r="3.6"/><circle cx="99.8" cy="70.4" r="3.6"/><circle cx="97.8" cy="64.3" r="3.6"/>
+        <circle cx="103" cy="66" r="2" fill="#e9c875" stroke="none"/>
+      </g>
+      <g class="season-summer" transform="translate(66 92) scale(.62) translate(-66 -103)" fill="#e2a52a" stroke="#8a5a14" stroke-width=".8">
+        <circle cx="66" cy="103" r="5"/><path d="M66 94v-3M66 112v3M57 103h-3M75 103h3M60 97l-2-2M72 97l2-2M60 109l-2 2M72 109l2 2" fill="none"/>
+      </g>
+      <g class="season-autumn" transform="translate(40 66) scale(.62) translate(-29 -66)" stroke="#7a3a16" stroke-width=".8">
+        <path d="M29 57c7 4 8 11 0 18c-8-7-7-14 0-18z" fill="#c0682a"/>
+        <path d="M29 59v19" fill="none"/>
+      </g>
+      <g class="needle">
+        <path d="M66 32l4.5 34h-9z" fill="#3e5a3a"/>
+        <path d="M66 100l4.5-34h-9z" fill="#3a3026"/>
+      </g>
+      <circle class="cap" cx="66" cy="66" r="6" fill="url(#brass)" stroke="#5a4418"/>
+    </svg>
+    </div>
+  </div>
+  <button class="visit-back" type="button">Back to the page</button>
+  <aside class="note rumour" role="note" hidden>
+    <span class="note-mark" aria-hidden="true">❦</span>
+    <p></p>
+    <button class="note-button quiet" type="button" aria-label="Dismiss">×</button>
+  </aside>
+  <aside class="note gecko-note" role="note" hidden>
+    <p>Firefox and browsers built on it, such as Zen, handle this kind of graphics work poorly, so the valley may stutter here. It runs far more smoothly in Chrome, Edge or Safari.</p>
+    <button class="note-button" type="button">Carry on</button>
+  </aside>
+  <button class="sound-toggle" type="button" aria-pressed="false" aria-label="Background sound">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fill-opacity=".15"/>
+      <path class="waves" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>
+    </svg>
+    <span class="label">Sound</span>
+  </button>
+  <button class="map-toggle" type="button" aria-expanded="false" aria-controls="minimap">Map</button>
+  <nav class="minimap" id="minimap" aria-label="Map of the journey">
+    <canvas aria-hidden="true"></canvas>
+    <div class="markers"></div>
+  </nav>
+
+  <div class="debug">
+    <div class="row" id="fps">measuring…</div>
+    <div class="row"><input id="time" type="range" min="0" max="1" step="0.005" aria-label="Time of day"></div>
+    <div class="row">
+      <label><input id="paint" type="checkbox"> Paint</label>
+      <label><input id="dither" type="checkbox"> Dither</label>
+      <label><input id="free" type="checkbox"> Free camera</label>
+      <label><input id="walk" type="checkbox"> Walk</label>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
