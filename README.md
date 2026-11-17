@@ -1,6 +1,6 @@
 # 3D CV World
 
-A CV told as a journey down a painted 3D river valley. Scrolling flies the camera from a watchtower in the mountains, past a homestead, an abbey, a guild town, a fair, the mills and a harbour inn, out to a ship at sea and the coast at nightfall, while the day passes from dawn to night. Each place is a section of your CV, and the world is built from what you put in it: every job raises a guild hall in the town, every skill group gets a stall at the fair, and your projects become workshops by the river.
+A CV, portfolio or any story in sections, told as a journey down a painted 3D river valley. Scrolling flies the camera from settlement to settlement, from the mountains to the sea, while the day passes from dawn to night. Each stop is a section, and the world is built from what you put in it: a guild hall for each item in one stop, a stall at the fair for each group in another, a workshop by the river for each project.
 
 It is a template, and the journey is not fixed. It is a list of stops: each pairs a **place kit** (the settlement that builds it in the valley) with a **panel layout** (how it shows on the page) and gives them its content. Stops can be reordered, renamed, removed, or added with a settlement of their own (`npm run new-stop`). Everything that makes it yours lives in `world.config.js`, and a configure step can fill that file in for you.
 
@@ -28,15 +28,13 @@ The repository ships with a fictional example person, so `npm run dev` works str
 - **The journey:** which stops to show, and optionally a new title and place name for each. New stops are added with `npm run new-stop` (below).
 - **The world:**
   - the time of year;
-  - the initials ploughed into a field;
   - the flags on the watchtower and abbey (about two dozen presets, or your own stripes and crosses);
-  - the colours of the evening dance;
   - whether visitors can walk the valley on foot;
   - which Easter eggs to keep.
 
 Press Enter to keep the value shown in brackets. The previous file is kept as `world.config.js.bak`.
 
-If you have a [JSON Resume](https://jsonresume.org/schema) file, start from it. Your work, education, skills, projects, awards, interests, publications and profile links are read in, and each job and skill group is given a sensible building:
+If you have a [JSON Resume](https://jsonresume.org/schema) file, start from it. Your work, education, skills, projects, awards, interests, publications and profile links become stops, and each job and skill group is given a sensible building:
 
 ```sh
 npm run configure -- --resume path/to/resume.json
@@ -52,23 +50,23 @@ Everything the configure step writes, and a little more, can be edited by hand. 
 | `site` | The address (for link previews), description and language |
 | `person` | Name, short name, title, location, tagline |
 | `journey` | The stops, in order. Each has an `id`, a `place` kit, a `panel` layout, its `content`, a `title`, `placeName` and `quote`, and optionally `time`, `camera`, `site` or `show: false` |
-| `writings` | Articles or posts, shown as pencilled margin notes beside the entry they are about (`at: '<stop id>:<entry title>'`), each with an object in the valley |
-| `world` | Season, flags, initials, dance colours, racing livery, Easter eggs, walking, extra chatter |
+| `writings` | Links (writing, talks, repositories) shown as pencilled margin notes beside the entry they are about (`at: '<stop id>:<entry title>'`) |
+| `world` | Season, flags, Easter eggs, walking, extra chatter |
 
 What the built-in place kits make of their content:
 
-- **`town`:** a guild hall for each of the first six items, typically jobs. Its `trade` chooses what is built outside:
+- **`town`:** a guild hall for each of the first six items, such as jobs or roles. Its `trade` chooses what is built outside:
   - `exchange`: a market house with traders haggling;
   - `school`: a schoolroom;
   - `lodge`: a master builder's crane;
   - `ledger`: a clerks' hall;
-  - `racing`: a race car, plus a racer on the roads in your livery.
+  - `workshop`: a wheelwright's yard.
 
   An optional `logo` (an image in `public/`) goes on its banners and shield.
 - **`fair`:** a stall for each of the first eight groups, with every item as its own object on the counter. `trade` dresses the stall: `clockmaker`, `apothecary`, `glazier`, `cooper` or `pedlar`.
 - **`mills`:** a workshop for each of the first six projects, under scaffolding while `status` is `'building'`. An `emblem` adds a `clock`, `tavern`, `dyer` (cloth dyed in your `languages`), `press` or `orrery`.
 - **`harbour`:** the inn, where a list of honours becomes trophies by the door.
-- **`ship`:** a globe that lights the countries visited.
+- **`ship`:** aboard a ship at sea. Paired with the `globe` layout and a list of countries, a globe on deck lights up the places visited.
 - **`watchtower`, `homestead`, `abbey`, `coast`:** settings that read no content.
 
 ### Adding stops of your own
@@ -91,6 +89,7 @@ Both files are then yours to change. A new stop can also reuse any existing layo
 - a settlement used twice, or two standing on top of each other;
 - unknown trades;
 - a writing whose `at` matches nothing;
+- settlements met out of valley order (the camera flies back up between them);
 - more items than buildings;
 - bad country codes or colours.
 
@@ -99,7 +98,7 @@ Both files are then yours to change. A new stop can also reuse any existing layo
 - **Scroll** to fly from stop to stop. Snapping lands each panel squarely on screen.
 - **Use the map** in the corner to fly straight to any stop.
 - **Drag** to orbit round the current stop, and double-click to recentre.
-- **Visit:** hall, stall, workshop and writing entries have a button that flies to their place in the valley.
+- **Visit:** entries with a place in the valley (halls, stalls, workshops and any a place kit anchors) have a button that flies there.
 - **Explore on foot:** the contact stop's "Explore more on foot" button, or `?walk`, starts first-person walking from the town.
   - **Controls:** WASD to move, mouse to look, Shift to hurry, Space to hop, `[` and `]` to turn the day, and the number keys (or the map) to fly to another settlement.
   - **Places:** you can go inside the inn and the guild halls, and climb the watchtower.
@@ -112,9 +111,6 @@ Each visit opens with one random hint at these. Every one can be switched off in
 
 - A compass aboard the ship. Clicking it adds a dial to the screen whose points are times of day. Pressing its crown flips it to a twelve-month dial that changes the season.
 - Linger at the abbey and the cloister choir begins to sing.
-- On real evenings, on the visitor's clock, there is a dance at the fair beneath a flag, and a piper plays on the watchtower.
-- Carrier pigeons fly from the watchtower to the market house, if one of your jobs is an `exchange`.
-- Your initials are ploughed into a field north of the town, readable from above.
 - The year follows the real month, or a fixed one set in `world.season`:
   - sowing in spring and haymaking in summer;
   - harvest in autumn, with the woods turning;
@@ -131,7 +127,7 @@ Each visit opens with one random hint at these. Every one can be switched off in
 | `?still&stop=3` | Renders a single frame at a stop, handy for screenshots; add `&t=0.5` for halfway through the next flight |
 | `?walk` | Starts on foot in the town |
 | `?month=1` to `?month=12`, `?season=winter` | Previews another time of year |
-| `?moon=0.5`, `?evening` | Previews a moon phase or the evening scenes |
+| `?moon=0.5` | Previews a moon phase |
 | `?paint=1` | Turns on the painterly brush filter |
 | `?quality=low` or `?quality=high` | Forces the frame-rate cap on or off |
 
@@ -178,6 +174,8 @@ The valley is drawn every frame, but the code keeps the cost down:
 - trees switch to simpler models with distance;
 - reflections and shadows are limited to where they show;
 - phones are held to 30 frames a second.
+
+[docs/PERFORMANCE.md](docs/PERFORMANCE.md) lists the Three.js best-practice rules the code follows and where each is applied, with links to the guides they come from. Read it before writing a place kit of your own, and use `?still&stop=N&bench` to measure a change.
 
 Firefox and browsers built on it draw this kind of scene much more slowly than Chromium or Safari, so their visitors see a one-time note saying so.
 

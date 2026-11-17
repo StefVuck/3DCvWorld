@@ -62,11 +62,10 @@ export function pennant(seed, w = 34, h = 22) {
 // A pencilled note in the margin of an entry, pointing to something written about it. `at` is
 // the stop's id, a colon and the entry's name, as in world.config.js `writings`.
 export function notes(cv, at) {
-  return (cv.writings || []).filter(w => w.at === at).map(w => el('aside', { class: 'margin-note', 'data-link': `writing:${w.id}` }, [
-    el('span', { class: 'note-lead', text: 'I wrote about this:' }),
+  return (cv.writings || []).filter(w => w.at === at).map(w => el('aside', { class: 'margin-note' }, [
+    el('span', { class: 'note-lead', text: w.lead ?? 'I wrote about this:' }),
     link(w.url, w.title),
-    el('span', { class: 'note-time', text: `${w.minutes} min read` }),
-    el('button', { class: 'visit', type: 'button', text: 'Find it' }),
+    w.minutes ? el('span', { class: 'note-time', text: `${w.minutes} min read` }) : null,
   ]));
 }
 

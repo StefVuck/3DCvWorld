@@ -9,7 +9,6 @@ import { place as mills } from './mills.js';
 import { place as harbour, INN } from './harbour.js';
 import { HALLS, RING } from './town.js';
 import { STALLS } from './fair.js';
-import { WORLD } from '../../world-config.js';
 
 const HABITS = ['#2e2824', '#3a302a', '#5e4c3a', '#d6cebd'];
 
@@ -83,7 +82,7 @@ export function populate(people, birds, active) {
       if (h.trade === 'school') k.idle(...hp(-0.8, -2.9), face(0), { ...inside, mode: MODE.conduct, color: '#2e2824', accent: '#1c1a17' });
       if (h.trade === 'lodge') { k.idle(...hp(-0.4, 0.4), face(Math.PI), { ...inside, mode: MODE.work, color: '#3f4f62' }); k.idle(...hp(1.6, 0.2), face(Math.PI * 0.8), inside); }
       if (h.trade === 'ledger') { k.idle(...hp(-1.8, 0.4), face(Math.PI), { ...inside, mode: MODE.work, color: '#3a2e3e' }); k.idle(...hp(1.8, 0.4), face(Math.PI), { ...inside, mode: MODE.work }); }
-      if (h.trade === 'racing') for (const [x, z] of [[-0.6, 0.5], [0.9, -1.9]]) k.idle(...hp(x, z), face(z > 0 ? Math.PI : 0), { ...inside, mode: MODE.work, color: WORLD.racing.body, accent: WORLD.racing.trim });
+      if (h.trade === 'workshop') for (const [x, z] of [[-0.6, 0.5], [0.9, -1.9]]) k.idle(...hp(x, z), face(z > 0 ? Math.PI : 0), { ...inside, mode: MODE.work, color: '#6b5a48', accent: '#3a3026' });
       if (h.trade === 'exchange') {
         // Pairs haggling across the tables under the market house, sellers behind, buyers in front
         for (const [x, z] of [[-3.4, 1.7], [1.8, 1.7], [-1.8, -1.5], [3.4, -1.5]]) {
@@ -113,9 +112,9 @@ export function populate(people, birds, active) {
       } else if (h.trade === 'ledger') {
         k.idle(...hp(-1.5, 8.8), face(Math.PI), { mode: MODE.conduct, color: '#3a2e3e', accent: '#1c1a17' });
         k.gather(...hp(0, 7.4), 2.6, 4, 4, { from: face(-0.6), span: 1.2 });
-      } else if (h.trade === 'racing') {
-        for (const [x, z] of [[-2.4, 7.6], [0.6, 9.6], [-1.2, 10.2]]) k.idle(...hp(x, z), face(Math.PI * 0.8), { mode: MODE.work, color: WORLD.racing.body, accent: WORLD.racing.trim });
-        k.idle(...hp(4.0, 7.2), face(Math.PI), { color: WORLD.racing.body, accent: WORLD.racing.trim });
+      } else if (h.trade === 'workshop') {
+        for (const [x, z] of [[-2.4, 7.6], [0.6, 9.6], [-1.2, 10.2]]) k.idle(...hp(x, z), face(Math.PI * 0.8), { mode: MODE.work, color: '#6b5a48', accent: '#3a3026' });
+        k.idle(...hp(4.0, 7.2), face(Math.PI), { color: '#4f5a3a' });
       }
     }
     birds.flock({ centre: town.point(45, 0, -45), count: 10, radius: 22, height: 40, speed: 7, seed: 5 });
@@ -160,16 +159,9 @@ export function populate(people, birds, active) {
     k.idle(...tap(-2.2, -3.35), 0, { y: 0.4, mode: MODE.conduct, color: '#5a3a2e', accent: '#d8cdb4' });
     for (const x of [-3.4, -1.0]) k.idle(...tap(x, -2.0), Math.PI, { y: 0.4 });
     for (const [x, z, f] of [[-3.9, 0.9, 2.4], [-5.6, -0.3, 0.9], [-1.5, 2.9, 2.6], [4.9, 2.6, -2.2], [3.1, 2.8, 2.0], [4.7, -0.2, -0.8]]) k.idle(...tap(x, z), f, { y: 0.4, mode: x > 0 && z < 0 ? MODE.conduct : MODE.idle });
-    // The choir on the green in front of the inn, a conductor before them and a few listening
-    const choir = '#34508f';
-    for (const [rad, n, from] of [[6, 7, -0.75], [7.4, 8, -0.8]]) {
-      for (let i = 0; i < n; i++) {
-        const a = from + (i / (n - 1)) * -from * 2;
-        const x = 2 + Math.sin(a) * rad, z = 63 - Math.cos(a) * rad;
-        people.add({ mode: MODE.sing, a: k.pt(x, z), heading: Math.atan2(2 - x, 63 - z) + harbour.rot, color: choir, accent: '#e8e0cc', phase: i * 0.13 + rad, scale: 0.92 + r() * 0.12 });
-      }
-    }
+    // A fiddler on the green in front of the inn, and a few dancing and listening
     k.idle(2, 61.5, Math.PI, { mode: MODE.conduct, color: '#7a2a24', accent: '#2e2824' });
+    k.circle(2, 66, 2.6, 6, { speed: 0.9, arms: 1 });
     k.gather(0, 63, 5.5, 8, 10, { from: -0.8, span: 1.4, y: wy + 1.4 });
     for (let i = 0; i < 6; i++) k.idle(-12 + i * 3 + r(), 70 + r() * 6, r() * 6, { y: wy + 1.4, mode: i % 2 ? MODE.work : MODE.idle });
     for (let i = 0; i < 4; i++) k.walk([-40 + r() * 30, 68 + r() * 8], [10 + r() * 40, 68 + r() * 8], { y: wy + 1.4 });

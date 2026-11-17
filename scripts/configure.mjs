@@ -120,20 +120,14 @@ if (!args.includes('--quick')) {
   const w = config.world = config.world ?? {};
   const season = await pick('Time of year:', ['calendar', 'spring', 'summer', 'autumn', 'winter'], w.season ?? 'calendar');
   w.season = season;
-  w.initials = (await ask('Initials ploughed into a field:', w.initials ?? p.name.split(/\s+/).map(s => s[0]).join(''))).slice(0, 3).toUpperCase();
   console.log('Flags (pick a number or type a name):');
   w.flags = w.flags ?? {};
   w.flags.watchtower = await flagStep('On the watchtower', w.flags.watchtower);
   w.flags.abbey = await flagStep('On the abbey spire', w.flags.abbey);
-  if (await yes('Change the colours of the evening dance at the fair?', false)) {
-    w.dance = w.dance ?? {};
-    w.dance.colours = (await ask('  Dancers’ colours, comma separated:', (w.dance.colours ?? []).join(', '))).split(',').map(s => s.trim()).filter(Boolean);
-    w.dance.flag = await flagStep('Flag beside the dance', w.dance.flag);
-  }
   w.walk = await yes('Allow walking the valley on foot?', w.walk !== false);
-  const eggs = w.eggs = { compass: true, choir: true, dance: true, pigeons: true, cropMark: true, seasonalScenes: true, rumour: true, ...(w.eggs ?? {}) };
+  const eggs = w.eggs = { compass: true, choir: true, seasonalScenes: true, rumour: true, ...(w.eggs ?? {}) };
   if (!(await yes('Keep all the Easter eggs?', Object.values(eggs).every(Boolean)))) {
-    const label = { compass: 'the compass on the ship', choir: 'the abbey choir', dance: 'the evening dance and piper', pigeons: 'carrier pigeons', cropMark: 'initials in a field', seasonalScenes: 'seasonal scenes (harvest, bonfire, Yule tree...)', rumour: 'a hint when the valley loads' };
+    const label = { compass: 'the compass on the ship', choir: 'the abbey choir', seasonalScenes: 'seasonal scenes (harvest, bonfire, Yule tree...)', rumour: 'a hint when the valley loads' };
     for (const k of Object.keys(label)) eggs[k] = await yes(`  Keep ${label[k]}?`, eggs[k]);
   }
 }

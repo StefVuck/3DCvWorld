@@ -67,10 +67,10 @@ export default {
       ],
     },
 
-    // The town raises a guild hall for each of the first six jobs. `trade` chooses what stands
-    // outside it: exchange (a market house, and carrier pigeons fly to it), school, lodge (a
-    // master builder's crane), ledger or racing (a race car, and a racer on the roads). `logo` is
-    // optional: an image in public/ for the hall's banners and the panel's shield.
+    // The town raises a guild hall for each of the first six items. `trade` chooses what stands
+    // outside it: exchange (a market house), school (a schoolroom), lodge (a master builder's
+    // crane), ledger (a clerks' hall) or workshop (a wheelwright's yard). `logo` is optional: an
+    // image in public/ for the hall's banners and the panel's shield.
     {
       id: 'experience', place: 'town', panel: 'halls', title: 'Experience', placeName: 'The Guild Town',
       quote: { text: 'Pleasure in the job puts perfection in the work.', by: 'Aristotle' },
@@ -79,7 +79,7 @@ export default {
         { role: 'Software Engineer', org: 'Oakbuilt Engineering', trade: 'lodge', place: 'Bath', period: '2022 – 2024', points: ['Built the geometry pipeline behind a structural analysis product.', 'Introduced property-based testing across the core solver.'] },
         { role: 'Teaching Assistant', org: 'University of Westhaven', trade: 'school', place: 'Westhaven', period: '2020 – 2022', points: ['Ran labs for the first-year programming course and marked coursework.'] },
         { role: 'Data Engineering Intern', org: 'Kestrel & Lark', trade: 'ledger', place: 'Remote', period: 'Summer 2021', points: ['Moved nightly reporting jobs onto an incremental pipeline.'] },
-        { role: 'Electronics Lead', org: 'Westhaven Racing', trade: 'racing', place: 'Westhaven', period: '2019 – 2021', points: ['Designed the telemetry board for the student race car.'] },
+        { role: 'Volunteer Mentor', org: 'Westhaven Code Club', trade: 'workshop', place: 'Westhaven', period: '2019 – 2021', points: ['Ran weekly sessions teaching young people to build their first games.'] },
       ],
     },
 
@@ -114,23 +114,28 @@ export default {
       ],
     },
 
-    // At the harbour inn. An interest with `items` is a list of honours, which become trophies
-    // on the shelf by the inn door.
+    // At the harbour inn. An entry with `items` is a list of honours, which become trophies on
+    // the shelf by the inn door.
     {
-      id: 'interests', place: 'harbour', panel: 'interests', title: 'Interests', placeName: 'The Harbour Inn',
+      id: 'interests', place: 'harbour', panel: 'interests', title: 'Outside Work', placeName: 'The Harbour Inn',
       quote: { text: 'No man is really happy or safe without a hobby.', by: 'William Osler' },
       content: [
         { title: 'Music', text: 'Plays cornet in a brass band, and sings in a community choir when the band is quiet.' },
         { title: 'Outdoors', text: 'Climbs indoors in winter and outdoors when the weather allows, and walks long-distance trails.' },
-        { title: 'Competitions', items: [['City Hack', 'winner, 2024'], ['Westhaven Code Jam', 'runner-up, 2021'], ['Formula Student', 'best electronics, 2020']] },
+        { title: 'Recognition', items: [['City Hack', 'winner, 2024'], ['Westhaven Code Jam', 'runner-up, 2021'], ['Open Source Award', 'nominee, 2023']] },
       ],
     },
 
-    // Aboard the ship, whose globe lights up the countries visited (two-letter ISO codes)
+    // Aboard the ship at sea. With the `globe` layout and content { visited: ['GB', 'FR', ...],
+    // wishlist: [...] } (two-letter country codes) a globe on deck lights up the countries
+    // visited; here it carries writing and talks instead.
     {
-      id: 'travel', place: 'ship', panel: 'globe', title: 'Travel', placeName: 'The Voyage',
-      quote: { text: 'The world is a book, and those who do not travel read only one page.', by: 'Augustine of Hippo' },
-      content: { visited: ['GB', 'IE', 'FR', 'ES', 'PT', 'IT', 'DE', 'NL', 'NO', 'JP', 'US', 'CA'], wishlist: ['IS', 'NZ', 'PE', 'KR'], alsoShaded: [] },
+      id: 'writing', place: 'ship', panel: 'entries', title: 'Writing & Talks', placeName: 'Further Afield',
+      quote: { text: 'Either write something worth reading or do something worth writing.', by: 'Benjamin Franklin' },
+      content: [
+        { title: 'Build systems are product', meta: ['Talk', 'Tooling Conf', '2025'], text: 'Why a build pipeline deserves a roadmap, an owner and users who are listened to.', link: 'https://example.com/talks/build-systems' },
+        { title: 'Watching Time Go By', meta: ['Article', '2024'], text: 'Building a slow-motion profiler, and what it showed about where the time really goes.', link: 'https://example.com/writing/profiling' },
+      ],
     },
 
     {
@@ -147,13 +152,12 @@ export default {
     },
   ],
 
-  // Writing, shown as a pencilled margin note beside the entry it is about. `at` is the stop's
-  // id, a colon and the entry's name (a job's role, a skill group, an interest's title or an
-  // entry's title). The built-in places also put an object in the valley for it: a ledger or
-  // punched cards on a stall, chalk on the school's blackboard, or a pamphlet by the trophies.
-  // `said` is what a passer-by says about it on foot.
+  // Links shown as a pencilled margin note beside the entry they are about: writing, a talk, a
+  // repository. `at` is the stop's id, a colon and the entry's name (a role, a skill group, an
+  // entry's title). Optional: `minutes` to read, `lead` (the words before the link, 'I wrote
+  // about this:' by default) and `said`, which a passer-by says about it on foot.
   writings: [
-    { id: 'profiling', at: 'skills:Systems', minutes: 9, title: 'Watching Time Go By: Building a Slow-Motion Profiler', url: 'https://example.com/writing/profiling', said: 'That ledger on the counter is Robin’s write-up on profiling.' },
+    { id: 'profiling', at: 'skills:Systems', minutes: 9, title: 'Watching Time Go By: Building a Slow-Motion Profiler', url: 'https://example.com/writing/profiling', said: 'Robin wrote about profiling, you know. Slow motion, of all things.' },
   ],
 
   // ---------------------------------------------------------------------------------------------
@@ -173,24 +177,12 @@ export default {
       abbey: { cross: '#f2ead8', field: '#7a2a24', shape: 'square' },
     },
 
-    // Your initials, ploughed into a field north of the town and readable from above
-    initials: 'RA',
-
-    // Colours of the folk dance at the fair on real evenings, and of the flag beside it
-    dance: { colours: ['#a8322d', '#f2ead8', '#2f5a8f'], flag: { stripes: ['#a8322d', '#f2ead8', '#2f5a8f'], direction: 'vertical', shape: 'pennant' } },
-
-    // The racing cart's livery (used when a job has trade 'racing')
-    racing: { body: '#e8b923', trim: '#1c1a17' },
-
     // Things to find. Switch any of them off with false.
     eggs: {
       compass: true, // a compass on the ship that turns the time of day, and the year
       choir: true, // linger at the abbey and the cloister choir sings
-      dance: true, // an evening dance at the fair, and a piper on the watchtower
-      pigeons: true, // carrier pigeons from the watchtower to the market house
-      cropMark: true, // your initials ploughed into a field
-      seasonalScenes: true, // sowing, haymaking, harvest, bonfire night, a Yule tree, snowmen
-      rumour: true, // a hint at one of these when the valley loads
+      seasonalScenes: true, // sowing, haymaking, harvest, a bonfire, a Yule tree, snowmen
+      rumour: true, // a hint at something to find when the valley loads
     },
 
     // First-person walking (the 'Explore more on foot' button on the contact stop, or ?walk)

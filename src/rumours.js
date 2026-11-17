@@ -10,18 +10,14 @@ const RUMOURS = [
   E.compass && 'Sailors say the compass aboard the ship points to more than north.',
   E.compass && 'They say the compass hides a second face for those who press its crown.',
   E.choir && 'Linger at the abbey a while and the brothers may sing for you.',
-  E.dance && 'On real evenings, the fair dances in a ring beneath its flag.',
-  E.pigeons && cv.experience.some(j => j.trade === 'exchange') && 'Pigeons fly from the watchtower now and then. Follow them to market.',
-  E.cropMark && 'Someone has ploughed strange lines into a field north of the town.',
-  'At the fair, a candle burns down the hours of a long night’s work.',
   cv.interests.some(i => i.items) && 'The inn keeps its trophies by the door.',
-  cv.experience.some(j => j.trade === 'racing') && 'A racer in team colours tears along the harbour road.',
   'A rider on a penny-farthing wobbles along the road north of the town.',
   calendar && 'The valley keeps the real calendar. Come back in another season.',
   calendar && 'In deep winter, someone skis the slopes above the watchtower.',
   calendar && E.seasonalScenes && 'Come in November and the town lights a bonfire.',
   WORLD.walk && 'The last stop knows a way to wander the valley on foot.',
   'An old stone circle stands on the western heights, if you know where to look.',
+  'A shepherd drives a flock along the road to the mills.',
 ].filter(Boolean);
 
 export function rumour() {

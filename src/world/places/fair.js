@@ -3,8 +3,7 @@ import { mulberry32, waterLevel } from '../valley.js';
 import { Place } from './place.js';
 import { anchor } from '../links.js';
 import { stopIndex } from '../../journey.js';
-import { tent, stall, barrel, cow, ledger, punchedCards } from '../props.js';
-import { Vector3 } from 'three';
+import { tent, stall, barrel, cow } from '../props.js';
 
 // On the west bank by the crossing, facing east towards the river
 export const place = new Place('fair', Math.PI / 2);
@@ -61,19 +60,6 @@ export function build({ builder, banners, heraldry, cv, wares, stop }) {
     for (let i = 0; i < 9; i++) b.blob(0.7, -6 + r() * 2, wy - 0.15, 78 + i * 6.5, SURF.stone, '#ffffff', [1, 0.45, 1], 1);
   });
   for (const [x, z, ry, g, i] of stalls) wares.stall(builder, place.matrix.clone().multiply(at(x, 0, z, ry)), place.site.y, g.trade, g.items, i);
-
-  // Writing about a stall's skills lies on its counter: a ledger of instructions, or a deck of
-  // punched cards on the pedlar's cart
-  for (const [x, z, ry, g] of stalls) {
-    const w = (cv.writings || []).find(v => v.at === `${stop.id}:${g.group}`);
-    if (!w) continue;
-    const frame = place.matrix.clone().multiply(at(x, 0, z, ry));
-    const spot = g.trade === 'pedlar' ? [1.22, 0.78, 0.18] : [-1.76, 0.9, 0.95];
-    builder.groundY = place.site.y;
-    builder.group(frame, s => (g.trade === 'pedlar' ? punchedCards : ledger)(s, ...spot, 0.25));
-    const local = (lx, ly, lz) => new Vector3(lx, ly, lz).applyMatrix4(frame);
-    anchor(`writing:${w.id}`, stopAt, local(spot[0], spot[1] + 0.1, spot[2]), 2, local(spot[0] + 0.5, spot[1] + 1.5, spot[2] + 3.2));
-  }
 
   const extras = [];
   for (const [lx, lz] of [[-55, 20], [-52, -40], [44, -40], [-48, 36], [56, -8]]) {

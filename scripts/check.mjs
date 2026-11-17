@@ -63,7 +63,7 @@ journey.forEach((s, i) => {
     list.forEach((p, k) => { if (p.emblem && !TRADES.emblem.includes(p.emblem)) problems.push(`${s.id}[${k}] (${p.name}): unknown emblem "${p.emblem}"; use one of ${TRADES.emblem.join(', ')}`); });
     if (list.length > 6) notes.push(`${s.id}: ${list.length} projects, but only the first 6 get a workshop`);
   }
-  if (s.panel === 'globe' || s.place === 'ship') {
+  if (s.panel === 'globe') {
     const codes = [...(s.content?.visited ?? []), ...(s.content?.wishlist ?? [])].filter(c => !/^[A-Z]{2}$/.test(c));
     if (codes.length) problems.push(`${s.id}: these are not two-letter country codes: ${codes.join(', ')}`);
   }
@@ -75,14 +75,14 @@ for (let i = 0; i < sites.length; i++) for (let k = i + 1; k < sites.length; k++
   const a = sites[i], b = sites[k];
   if (Math.hypot(a.z - b.z, a.offset - b.offset) < (a.r ?? 50) + (b.r ?? 50) + 120) problems.push(`"${a.id}" and "${b.id}" stand too close together; move one with \`site.z\` or \`site.offset\``);
 }
+// Settlements met out of valley order send the camera back up the valley between them
+for (let i = 1; i < sites.length; i++) if (sites[i].z < sites[i - 1].z) notes.push(`"${sites[i].id}" stands further up the valley than "${sites[i - 1].id}", which comes before it, so the camera flies back up between them`);
 (config.writings ?? []).forEach(w => {
   if (!w.at) notes.push(`writing "${w.title}" has no \`at\`, so it is not shown anywhere yet`);
   else if (!entries.has(w.at)) problems.push(`writing "${w.title}": \`at\` is "${w.at}", which matches no entry (use a stop's id, a colon and an entry's title, name, role or group)`);
 });
 const wld = config.world ?? {};
 for (const [k, f] of Object.entries(wld.flags ?? {})) flag(`world.flags.${k}`, f);
-if (wld.dance?.flag) flag('world.dance.flag', wld.dance.flag);
-if (wld.dance?.colours && !wld.dance.colours.every(hex)) problems.push('world.dance.colours should all be hex colours');
 const seasons = ['calendar', 'spring', 'summer', 'autumn', 'winter', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 if (wld.season && !seasons.includes(String(wld.season).toLowerCase())) problems.push(`world.season "${wld.season}" is not 'calendar', a season or a month`);
 if (!config.site?.url) notes.push('site.url is empty: link previews will not show an image until it is set');

@@ -2,12 +2,11 @@ import {
   BoxGeometry, CylinderGeometry, SphereGeometry, ConeGeometry, BufferAttribute, InstancedMesh, InstancedBufferAttribute,
   ShaderMaterial, Color, Matrix4, Group, Box3, Sphere, Vector3,
 } from 'three';
-import { WORLD } from '../world-config.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { shared } from '../atmosphere.js';
 import { atmosphereUniforms, noise, sky, terrainShadow, localShadow } from '../shaders/common.js';
 
-// Things that travel the valley's roads and river: carts, riders, a racing cart, sheep and their
+// Things that travel the valley's roads and river: carts, riders, sheep and their
 // shepherd, a penny-farthing, a skier and a ferry. Forward is +z.
 // Parts: 0 static, 1 wheel (turns about its axle; pivot.w is its radius), 2 leg (swings from
 // the hip; pivot.w is the swing direction), 3 tinted per instance.
@@ -59,18 +58,6 @@ const KINDS = {
     k.person(0, 0.8, 0.45, '#4f5a3a');
     for (const x of [-0.82, 0.82]) k.wheel(x, 0.55, -0.4, 0.55);
     k.horse();
-    return k.done();
-  },
-  // A light racing cart in the racing team's livery (world.config.js, world.racing)
-  racer() {
-    const k = kit(), { body, trim } = WORLD.racing;
-    k.add(new BoxGeometry(1.0, 0.3, 1.6), T(0, 0.65, -0.3), body);
-    k.add(new BoxGeometry(1.02, 0.08, 1.62), T(0, 0.82, -0.3), trim);
-    k.add(new BoxGeometry(0.9, 0.35, 0.06), T(0, 0.9, -1.1), '#f4f1ea');
-    for (const x of [-0.3, 0.3]) k.add(new BoxGeometry(0.06, 0.06, 1.6), T(x, 0.85, 1.2, -0.15), trim);
-    k.person(0, 0.75, 0.0, body, '#c9a080');
-    for (const x of [-0.65, 0.65]) k.wheel(x, 0.5, -0.4, 0.5, '#1c1a17');
-    k.horse(1.95);
     return k.done();
   },
   rider() {
@@ -140,7 +127,7 @@ const vertex = /* glsl */ `
     float travelled = (uTime + aInfo.x * 197.0) * aB.w;
     float u; vec2 d = aB.xz - aA.xz;
     if (aA.w > 0.5) {
-      // One way and round again (a skier, the racing cart): no turning back in view
+      // One way and round again (a skier): no turning back in view
       u = fract(travelled / len);
     } else {
       float f = fract(travelled / len * 0.5);

@@ -168,7 +168,8 @@ async function build() {
   if (WORLD.eggs.compass) ship.group.add(binnacle);
   globe = buildGlobe(cv.travel);
   globe.group.position.copy(GLOBE_AT);
-  ship.group.add(globe.group);
+  // The globe stands on deck only when the ship's stop lists places visited (the globe layout)
+  if (Array.isArray(cv.byPlace('ship')?.visited)) ship.group.add(globe.group);
   Object.assign(swell, { x: shipPos.x, z: shipPos.z });
   swellUniforms.uSwell.value.set(shipPos.x, shipPos.z, swell.radius, 1);
   swellUniforms.uShip.value.set(shipPos.x, shipPos.z, ship.heading.x, ship.heading.z);
@@ -208,7 +209,7 @@ async function build() {
   camera.updateProjectionMatrix();
   minimap = new Minimap(document.querySelector('.minimap'), STOPS, journey.views, i => goToStop(i));
   ship.update(0);
-  if (travelStop >= 0) minimap.setMarker(travelStop, ship.group.position.x, ship.group.position.z);
+  if (shipStop >= 0) minimap.setMarker(shipStop, ship.group.position.x, ship.group.position.z);
   if (coastStop >= 0) minimap.setMarker(coastStop, ship.group.position.x + 250, ship.group.position.z + 500);
 
   for (const g of [folk, flocks, traffic]) for (const m of g.children) m.userData.placeIndex = places.findIndex(p => p.place.id === m.userData.tag);
@@ -337,7 +338,6 @@ function cullByStop() {
   // Fireworks only go up after dark, over the town
   fireworks ??= lore.meshes.find(e => e.mesh.isPoints)?.mesh ?? false;
   if (fireworks) fireworks.visible = fireworks.visible && placeOn[places.findIndex(p => p.place.id === 'town')] && shared.uWindowGlow.value > 0.3;
-  for (const m of folk.children) if (m.userData.tag === 'dance') m.visible = m.visible && SEASON.evening;
   for (const m of traffic.children) if (m.userData.tag === 'skier') m.visible = m.visible && SEASON.winter;
   for (const m of folk.children) if (m.userData.tag.startsWith('season:')) m.visible = m.visible && inSeason(m.userData.tag);
   for (const e of lore.meshes) if (e.mesh.userData.tag?.startsWith('season:')) e.mesh.visible = e.mesh.visible && inSeason(e.mesh.userData.tag);
@@ -517,16 +517,17 @@ function snapInput() {
   });
 }
 
-const travelStop = STOPS.findIndex(s => s.view === 'voyage');
+const shipStop = STOPS.findIndex(s => s.view === 'voyage');
 const coastStop = STOPS.findIndex(s => s.view === 'coast');
-const SHIP_FROM = Math.min(...[travelStop, coastStop].filter(i => i >= 0), Infinity);
+const SHIP_FROM = Math.min(...[shipStop, coastStop].filter(i => i >= 0), Infinity);
 // The ship rocks every frame, so its views follow it; these run each frame from the Travel stop
 // on and reuse their vectors rather than allocating new ones
 const SV = Array.from({ length: 9 }, () => new Vector3());
 let lighthouse;
 function shipViews() {
   const g = ship.group, [a, b, c, at, away, side, from, look, sub] = SV;
-  if (travelStop >= 0) journey.setView(travelStop, g.localToWorld(a.set(-12.9, 6.9, 3.4)), g.localToWorld(b.set(-8.9, 5.1, -1.3)), g.localToWorld(c.copy(GLOBE_AT)));
+  // Aboard: framed on the globe, or on the compass binnacle when there is no globe on deck
+  if (shipStop >= 0) journey.setView(shipStop, g.localToWorld(a.set(-12.9, 6.9, 3.4)), g.localToWorld(globe.group.parent ? b.set(-8.9, 5.1, -1.3) : b.set(-8.2, 5.7, 0.0)), g.localToWorld(globe.group.parent ? c.copy(GLOBE_AT) : c.set(-9.0, 5.3, 1.6)));
   // The coast view looks back past the ship towards the lighthouse, or where the harbour would be
   lighthouse ??= places.find(p => p.lighthouse)?.lighthouse ?? new Vector3(riverX(7650) + 118, 20, 7650);
   if (coastStop < 0) return;
@@ -998,7 +999,7 @@ function stopNearPlace(k) {
 function walkFrame(dt) {
   walker.update(dt, state.time);
   const near = walker.nearest();
-  const i = camera.position.distanceTo(ship.group.position) < 200 && travelStop >= 0 ? travelStop : stopNearPlace(near.index);
+  const i = camera.position.distanceTo(ship.group.position) < 200 && shipStop >= 0 ? shipStop : stopNearPlace(near.index);
   lastLoc = { i, travel: false, t: 0, drift: 0 };
   active = i;
   const t = manualTime ?? STOPS[i].time;
@@ -1057,7 +1058,7 @@ function observePanels() {
     orbitInput();
     if (WORLD.eggs.compass) compass = new Compass({
       camera, canvas: renderer.domElement, mesh: binnacle,
-      isAboard: () => active === travelStop && !lastLoc.travel,
+      isAboard: () => active === shipStop && !lastLoc.travel,
       onTime: t => { manualTime = t; },
     });
     onSeason(s => forest.setSeason(s));

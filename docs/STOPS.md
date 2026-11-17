@@ -190,7 +190,8 @@ Styles live in `index.html`. The classes the built-in layouts use (`entry`, `met
 | `fair` | A stall per group and an object per item, dressed by `trade` | skill groups (`stalls`) |
 | `mills` | A workshop per item, with an `emblem` and scaffolding while `status` is `'building'` | projects (`workshops`) |
 | `harbour` | Quays, boats, the inn with its taproom; honours become trophies | interests (`interests`) |
-| `ship`, `coast` | Aboard the ship with its globe; the coast at nightfall with its lighthouse | travel (`globe`), contact |
+| `ship` | Aboard a ship at sea; a globe on deck when the stop's content lists countries `visited` | any, or countries (`globe`) |
+| `coast` | The coast at nightfall, with its lighthouse | contact |
 
 Any kit can pair with any layout. The town works for anything with roles and organisations, and the `entries` layout works with any kit.
 
@@ -203,3 +204,11 @@ Some things don't belong to one stop:
 - **Easter eggs:** these too depend on settlements being present.
 
 They live in `src/world/lore.js` and `src/world/seasonal.js`, and each skips itself when the settlement it needs isn't in the journey.
+
+## Keeping it fast
+
+Every stop adds to what is drawn each frame. [PERFORMANCE.md](PERFORMANCE.md) lists the rules the built-in kits follow. For a new kit, the ones that matter most are these:
+- **Build static things into `builder`,** so they are merged into one mesh.
+- **Instance anything repeated.**
+- **Tag your people with the place,** so they are culled with it.
+- **Keep work out of the frame loop.**

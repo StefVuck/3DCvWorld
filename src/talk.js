@@ -40,7 +40,7 @@ const BUILT_IN = {
   // Each interest is told by someone at the harbour; a list of honours by the innkeeper
   harbour: (stop, h) => {
     const all = [].concat(stop.content ?? []);
-    const tellers = [[2, 59, 'The choirmaster'], [-10, 72, 'A ferryman'], [14, 66, 'A fisherman'], [-16, 62, 'A boatwright']];
+    const tellers = [[2, 59, 'The fiddler'], [-10, 72, 'A ferryman'], [14, 66, 'A fisherman'], [-16, 62, 'A boatwright']];
     all.filter(x => !x.items).slice(0, tellers.length).forEach((x, k) => {
       const [px, pz, who] = tellers[k];
       h.add(h.at(px, pz), who, [`${h.N} told me about ${String(x.title).toLowerCase()} once.`, ...sentences(x.text)]);

@@ -7,38 +7,35 @@ import { postRail, wattle, sheep, chicken, hollow } from '../props.js';
 // Local frame: +z is the way the cottage faces (south-west, towards the river and the sun)
 export const place = new Place('homestead', -Math.PI / 6);
 
-// Inside the cottage: a study for someone who solders, plays, reads and travels
+// Inside the cottage: a study, with a hearth, a writing desk under the front window, a bookcase
+// and an armchair by the fire
 export const STUDY = { x: -2.4, z: 1.4 };
-function study(b, { L, D, y, h, lamp }) {
+function study(b, { L, D, y, lamp }) {
   const back = -D / 2, wall = -L / 2;
   b.box(0.7, 1.5, 1.7, wall + 0.35, y, 0.6, SURF.stone, '#bdb5a3');
   b.box(0.06, 0.8, 1.0, wall + 0.71, y + 0.08, 0.6, SURF.flat, '#1c1a17');
   b.box(0.9, 0.1, 2.0, wall + 0.45, y + 1.5, 0.6, SURF.timber);
   for (let k = 0; k < 4; k++) b.blob(0.11 + (k % 2) * 0.05, wall + 0.6, y + 0.25 + (k % 2) * 0.12, 0.35 + k * 0.17, SURF.flat, '#ffb347', [1, 1.8, 1], 1);
-  // The piano against the back wall, with a stool and music on the stand
-  const px = -3.1;
-  b.box(1.5, 1.25, 0.6, px, y, back + 0.32, SURF.plank, '#3a2a20');
-  b.box(1.42, 0.05, 0.22, px, y + 0.74, back + 0.72, SURF.flat, '#efe9dc');
-  b.box(1.42, 0.03, 0.08, px, y + 0.78, back + 0.66, SURF.flat, '#1c1a17');
-  b.box(0.5, 0.36, 0.02, px, y + 1.0, back + 0.63, SURF.flat, '#f2ede0', 0, -0.25);
-  b.box(0.7, 0.48, 0.38, px, y, back + 1.15, SURF.plank, '#5a4030');
+  // An armchair by the fire
+  const ax = wall + 1.7;
+  b.box(0.75, 0.42, 0.75, ax, y, 1.2, SURF.cloth, '#6a3a2e');
+  b.box(0.75, 0.55, 0.16, ax, y + 0.42, 1.55, SURF.cloth, '#6a3a2e');
+  for (const s of [-1, 1]) b.box(0.14, 0.22, 0.75, ax + s * 0.32, y + 0.42, 1.2, SURF.cloth, '#5a2e24');
   for (const [x, wy, side] of [[-2.4, 1.6, 1], [3.4, 1.6, 1], [-2.0, 1.45, -1], [2.4, 1.45, -1]]) b.box(0.9, 0.75, 0.03, x, wy, side * (D / 2 - 0.03), SURF.glass);
-  // The workbench under the front window: an oscilloscope, a board and a soldering iron
+  // The writing desk under the front window, with papers, books and an inkwell
   const wz = D / 2 - 0.45;
   b.box(1.9, 0.8, 0.75, STUDY.x, y, wz, SURF.plank, '#7a5a40');
-  b.box(0.55, 0.36, 0.42, STUDY.x - 0.55, y + 0.8, wz + 0.05, SURF.flat, '#4a4844');
-  b.box(0.36, 0.24, 0.02, STUDY.x - 0.6, y + 0.88, wz - 0.17, SURF.flat, '#5fae6a');
-  b.box(0.42, 0.02, 0.3, STUDY.x + 0.2, y + 0.81, wz - 0.05, SURF.flat, '#2f6a3a');
-  for (let k = 0; k < 6; k++) b.box(0.05, 0.03, 0.04, STUDY.x + 0.06 + (k % 3) * 0.1, y + 0.83, wz - 0.12 + Math.floor(k / 3) * 0.12, SURF.flat, '#1c1a17');
-  b.beam([STUDY.x + 0.65, y + 0.8, wz], [STUDY.x + 0.5, y + 1.0, wz - 0.15], 0.025, SURF.flat, '#a8322d');
+  for (let k = 0; k < 4; k++) b.box(0.3, 0.004, 0.22, STUDY.x - 0.5 + k * 0.08, y + 0.805 + k * 0.004, wz - 0.05, SURF.flat, '#efe9dc', (k - 1.5) * 0.12);
+  for (let k = 0; k < 3; k++) b.box(0.22, 0.06, 0.3, STUDY.x + 0.55, y + 0.8 + k * 0.06, wz, SURF.flat, ['#7a2a24', '#2e3a4a', '#3e5a3a'][k], k * 0.15);
+  b.cylinder(0.05, 0.07, STUDY.x + 0.15, y + 0.8, wz + 0.15, SURF.flat, '#1c1a17', 8);
+  b.beam([STUDY.x + 0.15, y + 0.85, wz + 0.15], [STUDY.x + 0.05, y + 1.05, wz + 0.2], 0.008, SURF.flat, '#e8e0cc');
   b.box(0.48, 0.48, 0.42, STUDY.x - 0.1, y, wz - 0.75, SURF.plank, '#5a4030');
-  // Books: politics, literature and the arts
+  // A full bookcase along the back wall
   b.box(1.6, 2.1, 0.36, 0.7, y, back + 0.2, SURF.plank, '#5a4030');
   for (let s = 0; s < 4; s++) for (let i = 0; i < 9; i++) b.box(0.14, 0.34 + (i % 3) * 0.04, 0.24, 0.08 + i * 0.155, y + 0.12 + s * 0.5, back + 0.24, SURF.flat, ['#7a2a24', '#2e3a4a', '#3e5a3a', '#8a7a4a', '#5a3a2e', '#c9b48a'][(i + s * 2) % 6]);
-  // A map of the world on the end wall, pinned where he has been
-  b.box(0.04, 1.1, 1.8, L / 2 - 0.03, y + 1.0, -0.4, SURF.flat, '#d9cba6');
-  for (const [z, yy, s] of [[-0.9, 1.6, 0.5], [-0.15, 1.45, 0.55], [0.15, 1.75, 0.35], [-0.6, 1.25, 0.3], [0.3, 1.25, 0.25]]) b.box(0.03, s * 0.5, s, L / 2 - 0.06, y + yy - s * 0.25, z, SURF.flat, '#a3b08a');
-  for (let k = 0; k < 12; k++) b.blob(0.03, L / 2 - 0.08, y + 1.25 + ((k * 0.37) % 0.6), -1.1 + ((k * 0.61) % 1.4), SURF.flat, '#a8322d', [1, 1, 1], 0);
+  // A framed picture on the end wall
+  b.box(0.04, 0.8, 1.1, L / 2 - 0.03, y + 1.2, -0.4, SURF.plank, '#5a4030');
+  b.box(0.03, 0.66, 0.96, L / 2 - 0.05, y + 1.27, -0.4, SURF.flat, '#8a9a6a');
   b.box(2.6, 0.02, 1.7, 0.2, y, 0.3, SURF.cloth, '#8a2f2a');
   lamp(-0.6, 0.4);
   lamp(2.4, 0.6);

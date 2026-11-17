@@ -249,7 +249,7 @@ export class Birds {
     }
   }
 
-  // Birds that fly a route from one place to another now and then (carrier pigeons)
+  // Birds that fly a route from one place to another now and then
   courier({ from, to, count = 3, speed = 30, color = '#8a8e96', size = 0.7 }) {
     const period = from.distanceTo(to) / speed / 0.55;
     for (let i = 0; i < count; i++) {

@@ -98,8 +98,6 @@ export function buildTerrain({ nx = 640, nz = 1100, heightTex, heightBounds, can
       uSiteAtlas: { value: null },
       uSiteBounds: { value: Array.from({ length: 16 }, () => new Vector4(0, 0, 1, 1)) },
       uSiteCount: { value: 0 },
-      uCropTex: { value: null },
-      uCropRect: { value: new Vector4(0, 0, 1, 0) },
     },
     vertexShader: /* glsl */ `
       attribute vec4 aData;
@@ -115,8 +113,6 @@ export function buildTerrain({ nx = 640, nz = 1100, heightTex, heightBounds, can
       }
     `,
     fragmentShader: /* glsl */ `
-      uniform sampler2D uCropTex;
-      uniform vec4 uCropRect;
       ${atmosphereUniforms}
       ${noise}
       ${fields}
@@ -266,16 +262,6 @@ export function buildTerrain({ nx = 640, nz = 1100, heightTex, heightBounds, can
         }
         ground = mix(ground, srgb(vec3(0.84, 0.85, 0.86)) * (0.94 + 0.08 * fine), snow);
 
-        // One field is ploughed into a pattern that only reads from high up
-        if (uCropRect.z > 1.0) {
-          vec2 cq = xz - uCropRect.xy;
-          float ca = cos(uCropRect.w), sa = sin(uCropRect.w);
-          cq = vec2(ca * cq.x - sa * cq.y, sa * cq.x + ca * cq.y) / uCropRect.z + 0.5;
-          if (cq.x > 0.0 && cq.x < 1.0 && cq.y > 0.0 && cq.y < 1.0) {
-            float furrow = texture(uCropTex, cq).r;
-            ground = mix(ground, ground * srgb(vec3(0.62, 0.56, 0.48)), furrow * 0.85);
-          }
-        }
 
         float beach = 1.0 - smoothstep(0.6, 2.2, h);
         ground = mix(ground, srgb(vec3(0.78, 0.71, 0.55)), beach * step(6500.0, xz.y));

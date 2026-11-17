@@ -4,24 +4,30 @@
 // to each stop, so the soundscape crossfades as the valley scrolls past. A soft rush of air
 // rises with the camera's speed during flights.
 
+import { STOPS } from './journey.js';
+import { KITS } from './world/places/index.js';
+
 // Credits for these are in public/audio/CREDITS.md
 export const AUDIO_FILES = {
   birds: 'audio/birds.m4a',
   hens: 'audio/hens.m4a',
 };
 
-const STOP_LAYERS = [
-  { birds: 0.08 },
-  { birds: 0.8, hens: 0.45 },
-  { rooks: 0.5, bell: 0.7, chant: 0.4 },
-  { cart: 0.35, handbell: 0.35, smith: 0.3 },
-  { pipe: 0.5, birds: 0.2 },
-  { mallets: 0.4, tick: 0.12 },
-  { gulls: 0.4, choir: 0.5 },
-  { creak: 0.45 },
-  { buoy: 0.35, crickets: 0.35 },
-];
-const VISIT_BOOST = { job: 'smith', project: 'mallets', skill: 'pipe' };
+// The quiet layers heard at each place kit. A kit of your own can export `sound`, an object of
+// layer names and levels in the same form; without one it gets birdsong.
+const KIT_LAYERS = {
+  watchtower: { birds: 0.08 },
+  homestead: { birds: 0.8, hens: 0.45 },
+  abbey: { rooks: 0.5, bell: 0.7, chant: 0.4 },
+  town: { cart: 0.35, handbell: 0.35, smith: 0.3 },
+  fair: { pipe: 0.5, birds: 0.2 },
+  mills: { mallets: 0.4, tick: 0.12 },
+  harbour: { gulls: 0.4 },
+  ship: { creak: 0.45 },
+  coast: { buoy: 0.35, crickets: 0.35 },
+};
+// Visiting a hall, workshop or stall brings up the sound of its work
+const VISIT_BOOST = { town: 'smith', mills: 'mallets', fair: 'pipe' };
 const DAY_ONLY = new Set(['birds', 'hens', 'rooks', 'gulls']);
 const NIGHT_ONLY = new Set(['crickets']);
 const MASTER = 0.18;
@@ -261,11 +267,12 @@ export class Soundscape {
     const want = new Map();
     weights.forEach((w, s) => {
       if (w < 0.001) return;
-      for (const [name, level] of Object.entries(STOP_LAYERS[s] || {})) want.set(name, (want.get(name) ?? 0) + w * level);
+      const kit = STOPS[s]?.kit;
+      for (const [name, level] of Object.entries(KITS[kit]?.sound ?? KIT_LAYERS[kit] ?? { birds: 0.4 })) want.set(name, (want.get(name) ?? 0) + w * level);
     });
     for (const [name, level] of Object.entries(extra)) if (level > 0.001) want.set(name, (want.get(name) ?? 0) + level);
     if (visit) {
-      const boosted = VISIT_BOOST[visit.split(':')[0]];
+      const boosted = VISIT_BOOST[STOPS.find(st => st.id === visit.split(':')[0])?.kit];
       if (boosted && want.has(boosted)) want.set(boosted, Math.min(1, want.get(boosted) * 2));
     }
     const now = this.ctx.currentTime;

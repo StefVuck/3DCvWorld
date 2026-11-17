@@ -246,40 +246,6 @@ export function stall(b, x, z, ry, a, c, r, n = 6) {
   });
 }
 
-// Writing made into things: an open ledger, a deck of punched cards, a pinned pamphlet and a
-// blackboard of chalked notes. Each is drawn about its own origin in the caller's frame.
-export function ledger(b, x, y, z, ry = 0) {
-  b.group(at(x, y, z, ry), g => {
-    g.box(0.5, 0.03, 0.34, 0, 0, 0, SURF.flat, '#6a2a24');
-    for (const s of [-1, 1]) {
-      g.box(0.23, 0.02, 0.31, s * 0.122, 0.035, 0, SURF.flat, '#efe6d0', 0, 0, -s * 0.1);
-      for (let k = 0; k < 6; k++) g.box(0.15 - (k % 3) * 0.03, 0.004, 0.011, s * 0.12 - 0.01 * s, 0.05 + 0.0, -0.11 + k * 0.045, SURF.flat, '#2a2420', 0, 0, -s * 0.1);
-    }
-    g.beam([0.2, 0.05, 0.12], [0.33, 0.2, 0.2], 0.008, SURF.flat, '#d8cdb4');
-  });
-}
-
-export function punchedCards(b, x, y, z, ry = 0) {
-  const r = mulberry32(1959);
-  b.group(at(x, y, z, ry), g => {
-    for (let i = 0; i < 14; i++) g.box(0.32, 0.007, 0.142, (r() - 0.5) * 0.012, i * 0.008, (r() - 0.5) * 0.01, SURF.flat, '#e8dcb0', (r() - 0.5) * 0.05);
-    const top = 14 * 0.008 + 0.004;
-    for (let col = 0; col < 14; col++) for (let row = 0; row < 4; row++) if (r() < 0.45) g.box(0.008, 0.002, 0.014, -0.14 + col * 0.0215, top, -0.05 + row * 0.033, SURF.flat, '#2a2420');
-    g.box(0.33, 0.016, 0.02, 0, 0.05, 0, SURF.cloth, '#8a2f2a');
-    for (let i = 0; i < 4; i++) g.box(0.32, 0.007, 0.142, 0.02 * i, 0.002 + i * 0.008, -0.2 - i * 0.02, SURF.flat, '#e8dcb0', 0.3 + i * 0.2);
-  });
-}
-
-export function pamphlet(b, x, y, z, ry = 0) {
-  b.group(at(x, y, z, ry), g => {
-    g.box(0.5, 0.66, 0.03, 0, 0, 0, SURF.plank, '#6b4f36');
-    g.box(0.38, 0.52, 0.01, 0, 0.07, 0.02, SURF.flat, '#f2ead6', 0, 0, 0.03);
-    g.box(0.26, 0.04, 0.004, 0, 0.5, 0.027, SURF.flat, '#2a2420', 0, 0, 0.03);
-    for (let k = 0; k < 7; k++) g.box(0.28 - (k % 2) * 0.05, 0.012, 0.004, 0, 0.43 - k * 0.05, 0.027, SURF.flat, '#4a4136', 0, 0, 0.03);
-    g.blob(0.018, 0, 0.56, 0.03, SURF.flat, '#a8322d', [1, 1, 1], 0);
-  });
-}
-
 export function barrel(b, x, y, z) {
   b.cylinder(0.32, 0.85, x, y, z, SURF.plank, '#8a6648', 10);
   b.cylinder(0.335, 0.06, x, y + 0.15, z, SURF.flat, '#3a3530', 10);

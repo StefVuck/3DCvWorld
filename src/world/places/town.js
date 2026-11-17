@@ -2,7 +2,6 @@ import { SURF, at } from '../kit.js';
 import { mulberry32, waterLevel } from '../valley.js';
 import { Place } from './place.js';
 import { anchor } from '../links.js';
-import { WORLD } from '../../world-config.js';
 import { stopIndex } from '../../journey.js';
 import { Bunting } from '../bunting.js';
 import { Carts } from '../carts.js';
@@ -93,7 +92,8 @@ const TRADES = {
     }
     for (const [a, c] of [[2, 14], [14, 27], [7, 20], [20, 27], [9, 22]]) b.beam([cells[a][0], cells[a][1], 7.53], [cells[c][0], cells[c][1], 7.53], 0.04, SURF.flat, '#a8322d');
   },
-  racing(b) {
+  // workshop: a wheelwright's yard, with a wagon on blocks
+  workshop(b) {
     b.group(at(-1, 0, 8.4, 0.5), c => {
       c.box(3.2, 0.5, 1.2, 0, 0.45, 0, SURF.plank, '#a8322d');
       c.box(1.2, 0.5, 0.9, -0.4, 0.95, 0, SURF.plank, '#8a2a24');
@@ -151,12 +151,12 @@ const ROOMS = {
     for (let s = 0; s < 4; s++) for (let i = 0; i < 12; i++) b.box(0.22, 0.42, 0.18, -L / 2 + 0.3, y + 0.15 + s * 0.58, -2.0 + i * 0.25, SURF.flat, ['#7a2a24', '#2e3a4a', '#3e5a3a', '#8a7a4a', '#5a3a2e'][(i + s) % 5]);
     void D;
   },
-  racing(b, { L, y }) {
+  workshop(b, { L, y }) {
     const z = -0.6;
     for (const x of [-1.1, 1.1]) b.box(0.3, 0.35, 1.2, x, y, z, SURF.stone, '#8a8a88');
-    b.box(3.0, 0.32, 0.95, 0, y + 0.45, z, SURF.flat, WORLD.racing.body);
-    b.box(0.9, 0.35, 0.7, -0.2, y + 0.77, z, SURF.flat, WORLD.racing.body);
-    b.group(at(1.5, y + 0.6, z, 0, 0, -Math.PI / 2), g => g.cone(0.45, 0.9, 0, 0, 0, SURF.flat, WORLD.racing.body, 4));
+    b.box(3.0, 0.32, 0.95, 0, y + 0.45, z, SURF.flat, '#7a5a40');
+    b.box(0.9, 0.35, 0.7, -0.2, y + 0.77, z, SURF.flat, '#7a5a40');
+    b.group(at(1.5, y + 0.6, z, 0, 0, -Math.PI / 2), g => g.cone(0.45, 0.9, 0, 0, 0, SURF.flat, '#7a5a40', 4));
     b.box(0.3, 0.06, 1.5, -1.6, y + 0.85, z, SURF.flat, '#1c1a17');
     for (const x of [-1.0, 1.0]) for (const s of [1, -1]) b.cylinder(0.3, 0.26, x, y + 0.6, z + s * 0.65, SURF.flat, '#1c1a17', 12, 0, Math.PI / 2);
     b.box(0.06, 1.2, 2.4, L / 2 - 0.05, y + 0.8, z, SURF.plank, '#7a5a40');
@@ -201,18 +201,6 @@ export function build({ builder, banners, heraldry, spinners, cv, stop }) {
       // Look at the trade from out in the square, a little to whichever side is nearer the middle
       const [vx, vz] = [ry + 0.3, ry - 0.3].map(a => [x + Math.sin(a) * 20, z + Math.cos(a) * 20])
         .sort((p, q) => Math.hypot(...p) - Math.hypot(...q))[0];
-      // Writing about a job is chalked on the blackboard out in front of its hall
-      const note = (cv.writings || []).find(w => w.at === `${stop.id}:${job.role}`);
-      if (note && job.trade === 'school') {
-        b.group(at(x, 0, z, ry), g => g.group(at(3.0, 1.0, 7.53, 0, -0.2), c => {
-          c.box(0.9, 0.07, 0.006, -0.1, 0.92, 0, SURF.flat, '#ecebe4');
-          for (let k = 0; k < 5; k++) c.box(1.15 - (k % 3) * 0.22, 0.026, 0.006, -0.04 - (k % 3) * 0.11, 0.76 - k * 0.13, 0, SURF.flat, '#d8d8d0');
-          c.box(0.05, 0.05, 0.006, -0.62, 0.76, 0, SURF.flat, '#ecebe4');
-          c.box(0.05, 0.05, 0.006, -0.62, 0.5, 0, SURF.flat, '#ecebe4');
-        }));
-        const hp = (lx, ly, lz) => place.point(x + lx * Math.cos(ry) + lz * Math.sin(ry), ly, z - lx * Math.sin(ry) + lz * Math.cos(ry));
-        anchor(`writing:${note.id}`, stopIndex(stop.id), hp(3.0, 1.55, 7.5), 2.5, hp(4.2, 2.3, 11.4));
-      }
       anchor(`${stop.id}:${i}`, stopIndex(stop.id), place.point(x + Math.sin(ry) * (job.trade === 'exchange' ? 3 : 7.5), job.trade === 'exchange' ? 1.6 : 2.6, z + Math.cos(ry) * (job.trade === 'exchange' ? 3 : 7.5)), 9, place.point(vx, job.trade === 'exchange' ? 3.6 : 9, vz));
       const along = place.dir(Math.cos(ry), -Math.sin(ry));
       const front = place.dir(Math.sin(ry), Math.cos(ry));

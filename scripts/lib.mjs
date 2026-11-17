@@ -1,7 +1,7 @@
 // Shared pieces for the configure and check scripts
 
 export const TRADES = {
-  job: ['exchange', 'school', 'lodge', 'ledger', 'racing'],
+  job: ['exchange', 'school', 'lodge', 'ledger', 'workshop'],
   skill: ['clockmaker', 'apothecary', 'glazier', 'cooper', 'pedlar'],
   emblem: ['clock', 'tavern', 'dyer', 'press', 'orrery'],
 };
@@ -14,8 +14,8 @@ export const BUILT_IN_STOPS = [
   { id: 'experience', place: 'town', panel: 'halls', title: 'Experience', placeName: 'The Guild Town' },
   { id: 'skills', place: 'fair', panel: 'stalls', title: 'Skills', placeName: 'The Fair' },
   { id: 'projects', place: 'mills', panel: 'workshops', title: 'Projects', placeName: 'The Mills' },
-  { id: 'interests', place: 'harbour', panel: 'interests', title: 'Interests', placeName: 'The Harbour Inn' },
-  { id: 'travel', place: 'ship', panel: 'globe', title: 'Travel', placeName: 'The Voyage' },
+  { id: 'interests', place: 'harbour', panel: 'interests', title: 'Outside Work', placeName: 'The Harbour Inn' },
+  { id: 'writing', place: 'ship', panel: 'entries', title: 'Writing & Talks', placeName: 'Further Afield' },
   { id: 'contact', place: 'coast', panel: 'contact', title: 'Contact', placeName: 'The Coast at Nightfall' },
 ];
 
@@ -53,7 +53,7 @@ delete FLAG_PRESETS.Japan;
 export function guessJobTrade(text) {
   const t = text.toLowerCase();
   if (/teach|tutor|lectur|instructor|teaching|professor|demonstrator/.test(t)) return 'school';
-  if (/racing|motorsport|formula|rally|team principal/.test(t)) return 'racing';
+  if (/mechanic|technician|workshop|maker|craft|hardware|manufactur/.test(t)) return 'workshop';
   if (/bank|trading|trader|capital|finance|financial|market|exchange|fund|invest|quant/.test(t)) return 'exchange';
   if (/engineer|construct|architect|build|design|civil|mechanical|structural/.test(t)) return 'lodge';
   return 'ledger';
@@ -118,7 +118,7 @@ export function fromJsonResume(r) {
       ...(r.interests ?? []).map(i => ({ title: i.name ?? '', text: (i.keywords ?? []).join(', ') + ((i.keywords ?? []).length ? '.' : '') })),
       ...((r.awards ?? []).length ? [{ title: 'Awards', items: r.awards.map(a => [a.title ?? '', [a.awarder, date(a.date)].filter(Boolean).join(', ')]) }] : []),
     ],
-    writings: (r.publications ?? []).filter(p => p.url).map((p, i) => ({ id: `piece${i + 1}`, at: '', minutes: 5, title: p.name ?? '', url: p.url, said: '' })),
+    publications: (r.publications ?? []).map(p => ({ title: p.name ?? '', meta: [p.publisher, date(p.releaseDate)].filter(Boolean), text: p.summary ?? '', ...(p.url ? { link: p.url } : {}) })),
     contact: {
       blurb: '',
       links: [
@@ -128,11 +128,12 @@ export function fromJsonResume(r) {
       ],
     },
   };
-  const content = { about: parts.about, education: parts.education, experience: parts.experience, skills: parts.skills, projects: parts.projects, interests: parts.interests, contact: parts.contact };
+  const content = { about: parts.about, education: parts.education, experience: parts.experience, skills: parts.skills, projects: parts.projects, interests: parts.interests, writing: parts.publications, contact: parts.contact };
   const out = {
     person: parts.person,
-    journey: BUILT_IN_STOPS.map(s => (content[s.id] ? { ...s, content: content[s.id] } : s.id === 'travel' ? { ...s, content: { visited: [], wishlist: [] } } : s)),
-    writings: parts.writings,
+    // A stop with nothing to show (no publications, say) is left out
+    journey: BUILT_IN_STOPS.map(s => ({ ...s, ...(content[s.id] ? { content: content[s.id] } : {}) })).filter(s => !Array.isArray(s.content) || s.content.length || s.id === 'hero'),
+    writings: [],
   };
   return out;
 }

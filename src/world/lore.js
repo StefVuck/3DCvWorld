@@ -3,7 +3,7 @@ import {
   ClampToEdgeWrapping, CanvasTexture, InstancedMesh, InstancedBufferAttribute, DoubleSide,
 } from 'three';
 import { Builder, SURF, at, buildingMaterial } from './kit.js';
-import { boat, crate, WINDOWS, pamphlet } from './props.js';
+import { boat, crate, WINDOWS } from './props.js';
 import { anchor } from './links.js';
 import { riverX, riverWidth, waterLevel, heightAt, SITES } from './valley.js';
 import { shared } from '../atmosphere.js';
@@ -290,47 +290,6 @@ function riverCraft(count) {
   return group;
 }
 
-// A pattern of circuit traces round the initials SV, ploughed into one field
-function cropPattern(initials) {
-  const c = document.createElement('canvas');
-  c.width = c.height = 512;
-  const ctx = c.getContext('2d');
-  const r = mulberry32(77);
-  ctx.strokeStyle = '#fff';
-  ctx.fillStyle = '#fff';
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 9;
-  ctx.strokeRect(150, 170, 212, 172);
-  for (let i = 0; i < 26; i++) {
-    const side = i % 4;
-    let x = side === 0 ? 150 + r() * 212 : side === 1 ? 362 : side === 2 ? 150 + r() * 212 : 150;
-    let y = side === 0 ? 170 : side === 1 ? 170 + r() * 172 : side === 2 ? 342 : 170 + r() * 172;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    const out = [[0, -1], [1, 0], [0, 1], [-1, 0]][side];
-    const l1 = 20 + r() * 60;
-    x += out[0] * l1; y += out[1] * l1; ctx.lineTo(x, y);
-    const turn = r() < 0.5 ? 1 : -1, l2 = 15 + r() * 40;
-    x += (out[0] + out[1] * turn) * l2; y += (out[1] - out[0] * turn) * l2; ctx.lineTo(x, y);
-    const l3 = 20 + r() * 70;
-    x += out[0] * l3; y += out[1] * l3; ctx.lineTo(x, y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);
-    ctx.lineWidth = 7;
-    ctx.stroke();
-    ctx.lineWidth = 9;
-  }
-  ctx.font = `bold ${initials.length > 2 ? 110 : 150}px Georgia, serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.lineWidth = 10;
-  ctx.strokeText(initials, 256, 262);
-  const tex = new CanvasTexture(c);
-  tex.minFilter = tex.magFilter = LinearFilter;
-  return tex;
-}
 
 // ---------------------------------------------------------------------------------------------
 export function buildLore({ places, builder, people, birds, carts, banners, heraldry, meshHeight, terrain, cv }) {
@@ -403,7 +362,6 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   carts.tag = 'road-harbour';
   const race = chunk(mh, 0.15, 0.85, 0);
   carts.add(...chunk(mh, 0.4, 0.6, -0.8), { speed: 1.2, horse: '#d9d2c4' });
-  if ((cv.experience || []).some(j => j.trade === 'racing')) carts.add(race[0].clone().addScaledVector(new Vector3(-(race[1].z - race[0].z), 0, race[1].x - race[0].x).normalize(), 0.9), race[1].clone().addScaledVector(new Vector3(-(race[1].z - race[0].z), 0, race[1].x - race[0].x).normalize(), 0.9), { kind: 'racer', speed: 9, horse: '#1c1a17', phase: 0.2 });
   people.tag = 'road-pilgrims';
   const pil = chunk(ht, 0.9, 0.96, 0.6);
   for (let i = 0; i < 3; i++) people.add({ mode: MODE.walk, a: pil[0].clone(), b: pil[1].clone(), speed: 0.8, phase: 0.5 + i * 0.012, color: ['#6b5a48', '#d6cebd', '#5e4c3a'][i], accent: '#d6cebd', scale: 0.95 });
@@ -491,36 +449,7 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   }
   if (WORLD.eggs.choir && abbey) people.add({ mode: MODE.conduct, a: abbey.point(2, 0, 16.2), heading: Math.PI + abbey.rot, color: '#1c1a17', accent: '#efe9dc', gate: 'choir' });
 
-  // A circle dance at the fair in the real evening, beside a flag, and a piper on the watchtower
-  const fair = place('fair');
   const tower = place('watchtower');
-  if (WORLD.eggs.dance && fair) {
-    people.tag = 'dance';
-    const colours = WORLD.dance.colours;
-    for (let i = 0; i < 12; i++) people.add({ mode: MODE.circle, a: fair.point(-24, 0, -6), radius: 5.2, speed: 0.75, arms: 0.3, phase: i / 14, color: colours[i % colours.length], accent: '#efe6d3', scale: 0.92 });
-    const flag = WORLD.dance.flag;
-    if (flag) {
-      areas.build('dance', b => b.beam([fair.point(-31, 0, -8).x, fair.site.y, fair.point(-31, 0, -8).z], [fair.point(-31, 0, -8).x, fair.site.y + 5.5, fair.point(-31, 0, -8).z], 0.08), fair.site.y);
-      banners.add({ pos: fair.point(-31, 5.4, -8), along: fair.dir(1, 0.3), width: 2.6, height: 1.4, uv: heraldry.flag('dance-flag', flag.shape ?? 'pennant', drawFlag(flag)), mode: 'flag' });
-    }
-  }
-  if (WORLD.eggs.dance && tower) {
-    people.tag = 'watchtower';
-    people.add({ mode: MODE.pipe, a: tower.point(-2.3, 15.4, 1.3), heading: Math.PI / 2 + tower.rot, color: '#1f4a3a', accent: '#1c1a17' });
-    const chest = tower.point(-2.02, 16.95, 1.3), drone = tower.point(-2.3, 18.4, 1.0);
-    areas.build('piper', b => {
-      b.blob(0.2, chest.x, chest.y, chest.z, SURF.cloth, '#8a2f2a', [1, 0.8, 1.1], 1);
-      for (let k = 0; k < 3; k++) b.beam([chest.x, chest.y + 0.1, chest.z], [drone.x + (k - 1) * 0.12, drone.y - k * 0.15, drone.z - k * 0.1], 0.025, SURF.flat, '#2a2420');
-    }, tower.site.y);
-  }
-
-  // Carrier pigeons, now and then, from the watchtower to the market house
-  const market = HALLS.find(h => h.trade === 'exchange');
-  if (market && WORLD.eggs.pigeons && tower && place('town')) {
-    const town = place('town');
-    birds.tag = 'pigeons';
-    birds.courier({ from: tower.point(0, 18, 0), to: town.point(market.x, 9, market.z), count: LOW ? 2 : 4, speed: 34 });
-  }
 
   // Skiing on the winter snowfields at the head of the valley, in view of the watchtower; the
   // skier is only shown in winter
@@ -543,86 +472,25 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
     }
   }
 
-  // A field ploughed into circuit traces round your initials, north of the town, readable from
-  // the town's height
-  const town = place('town');
-  if (town && WORLD.eggs.cropMark && WORLD.initials) {
-    const crop = town.point(-40, 0, -200);
-    terrain.material.uniforms.uCropTex.value = cropPattern(WORLD.initials);
-    terrain.material.uniforms.uCropRect.value.set(crop.x, crop.z, 120, town.rot);
-  }
-
-  // Trophies on a shelf by the inn door, one for each competition, and beside them a pamphlet
-  // pinned to the wall: the write-up of the hackathons
+  // A trophy on a shelf by the inn door for each honour listed at the harbour
   const inn = place('harbour');
   if (inn) {
-  const honours = cv.interests.find(x => x.items), innStop = STOPS.find(s => s.kit === 'harbour');
-  const essay = honours && (cv.writings || []).find(w => w.at === `${innStop.id}:${honours.title}`);
-  if (essay) {
-    const onWall = (lx, ly, lz) => inn.point(lx, ly, 26 + lz);
-    areas.build('trophies', b => b.group(at(inn.point(0, 0, 26).x, inn.site.y, inn.point(0, 0, 26).z, inn.rot), g => pamphlet(g, 7.15, 1.05, 4.53)), inn.site.y);
-    anchor(`writing:${essay.id}`, STOPS.indexOf(innStop), onWall(7.15, 1.4, 4.6), 2, onWall(6.3, 2.0, 8.2));
-  }
   const wins = (cv.interests || []).find(i => i.items)?.items ?? [];
   areas.build('trophies', b => b.group(at(inn.point(0, 0, 26).x, inn.site.y, inn.point(0, 0, 26).z, inn.rot), g => {
     g.box(2.4, 0.06, 0.32, 5.4, 1.05, 4.75, SURF.plank, '#6b4f36');
     for (const x of [4.25, 6.55]) g.box(0.06, 1.1, 0.32, x, 0, 4.75, SURF.plank, '#5a4430');
-    wins.forEach(([name], k) => {
+    wins.slice(0, 5).forEach((win, k) => {
       const x = 4.55 + k * 0.45, y = 1.11, metal = ['#d4a23a', '#c0c4c8', '#d4a23a', '#b0723a', '#d4a23a'][k % 5];
-      if (/formula/i.test(name)) {
-        g.box(0.3, 0.06, 0.14, x, y + 0.03, 4.75, SURF.flat, metal);
-        for (const dx of [-0.1, 0.1]) g.cylinder(0.04, 0.03, x + dx, y + 0.04, 4.82, SURF.flat, '#1c1a17', 8, 0, Math.PI / 2);
-        g.box(0.16, 0.1, 0.1, x, y, 4.75, SURF.flat, '#3a3026');
-      } else if (/sheffield/i.test(name)) {
-        g.box(0.26, 0.3, 0.04, x, y, 4.78, SURF.plank, '#5a4430');
-        g.cylinder(0.08, 0.02, x, y + 0.15, 4.8, SURF.flat, metal, 12, 0, Math.PI / 2);
-      } else {
-        g.box(0.16, 0.05, 0.16, x, y, 4.75, SURF.plank, '#3a3026');
-        g.cylinder(0.025, 0.12, x, y + 0.05, 4.75, SURF.flat, metal, 8);
-        g.cylinder(0.05, 0.14, x, y + 0.17, 4.75, SURF.flat, metal, 12, 0, 0, 0, 0.1);
-        for (const s of [-1, 1]) g.torus(0.045, 0.012, x + s * 0.1, y + 0.25, 4.75, SURF.flat, metal, 0, Math.PI / 2);
-      }
+      g.box(0.16, 0.05, 0.16, x, y, 4.75, SURF.plank, '#3a3026');
+      g.cylinder(0.025, 0.12, x, y + 0.05, 4.75, SURF.flat, metal, 8);
+      g.cylinder(0.05, 0.14, x, y + 0.17, 4.75, SURF.flat, metal, 12, 0, 0, 0, 0.1);
+      for (const s of [-1, 1]) g.torus(0.045, 0.012, x + s * 0.1, y + 0.25, 4.75, SURF.flat, metal, 0, Math.PI / 2);
     });
   }), inn.site.y);
   }
 
-  let candle = null, flame = null, candleAt = null;
-  const fairPlace = place('fair');
-  if (fairPlace) {
-  // A hackers' tent at the fair, three hunched over a table, a candle marked in hours burning down
-  const ht0 = fair.point(20, 0, 16);
-  areas.build('hackers', b => b.group(at(ht0.x, fair.site.y, ht0.z, fair.rot + 0.4), g => {
-    for (const [x, z] of [[-1.8, -1.8], [1.8, -1.8], [-1.8, 1.8], [1.8, 1.8]]) g.beam([x, 0, z], [x, 2.6, z], 0.08);
-    g.stripedCone(2.9, 1.6, 0, 2.6, 0, '#1f3a2a', '#c9b48a', 10);
-    g.box(2.2, 0.06, 1.0, 0, 0.8, -0.3, SURF.plank, '#6b4f36');
-    for (const x of [-0.9, 0.9]) g.beam([x, 0, -0.3], [x, 0.8, -0.3], 0.05);
-    for (let k = 0; k < 3; k++) g.box(0.32, 0.01, 0.24, -0.6 + k * 0.6, 0.86, -0.3, SURF.flat, '#f2ede0', (k - 1) * 0.2);
-    g.beam([2.0, 0, 2.2], [2.0, 1.6, 2.2], 0.05);
-  }), fair.site.y);
-  people.tag = 'fair';
-  for (const x of [-0.6, 0, 0.6]) {
-    const p = ht0.clone().add(new Vector3(x, 0, 0.45).applyAxisAngle(UP, fair.rot + 0.4));
-    people.add({ mode: MODE.work, a: p.setY(fair.site.y), heading: fair.rot + 0.4 + Math.PI, color: ['#2a2420', '#3f4f62', '#4f5a3a'][x > 0 ? 2 : x < 0 ? 0 : 1], accent: '#1c1a17', phase: x + 0.5 });
-  }
-  candleAt = ht0.clone().add(new Vector3(0.75, 0, -0.3).applyAxisAngle(UP, fair.rot + 0.4)).setY(fair.site.y + 0.86);
-  const cb = new Builder();
-  cb.groundY = fair.site.y;
-  cb.cylinder(0.05, 0.42, 0, 0, 0, SURF.flat, '#efe6d3', 10);
-  for (let k = 1; k < 8; k++) cb.cylinder(0.052, 0.008, 0, k * 0.052, 0, SURF.flat, '#8a2f2a', 10);
-  candle = new Mesh(cb.build(), areas.material);
-  candle.position.copy(candleAt);
-  const fb = new Builder();
-  fb.blob(0.022, 0, 0.03, 0, SURF.glass, '#ffd27a', [1, 1.8, 1], 1);
-  flame = new Mesh(fb.build(), areas.material);
-  meshes.push({ mesh: candle, points: [candleAt.clone()] }, { mesh: flame, points: [candleAt.clone()] });
-  signs.add(ht0.clone().add(new Vector3(2.0, 0, 2.2).applyAxisAngle(UP, fair.rot + 0.4)).setY(fair.site.y + 1.45).add(new Vector3(-0.45, 0, 0).applyAxisAngle(UP, fair.rot + 0.4)), new Vector3(1, 0, 0).applyAxisAngle(UP, fair.rot + 0.4), '24 hours', true, 0.9);
-  }
-  const update = t => {
-    if (!candle) return;
-    const left = 1 - ((t / 300) % 1) * 0.85;
-    candle.scale.y = left;
-    flame.position.copy(candleAt).setY(candleAt.y + 0.42 * left);
-  };
+  const update = () => {};
+
 
   for (const m of areas.meshes()) meshes.push({ mesh: m });
   meshes.push({ mesh: signs.mesh(), points: [] });

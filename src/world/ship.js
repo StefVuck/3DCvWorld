@@ -54,7 +54,7 @@ function railing(b, x0, x1, z0, z1, y, h = 0.9) {
   }
 }
 
-function build(b) {
+function build(b, withGlobe) {
   hull(b);
   b.box(19, 0.16, 6.2, 0.4, 1.95, 0, SURF.plank, '#c0a07a');
   b.box(6.4, 2.3, 6.6, -8.2, 2.0, 0, SURF.plank, '#8a6648');
@@ -85,6 +85,8 @@ function build(b) {
   for (let i = 0; i < 4; i++) crate(b, 4 + (i % 2) * 0.8, 2.03 + Math.floor(i / 2) * 0.6, -2.2, i * 0.3);
   for (const [x, z] of [[-3.5, -2.3], [5.6, 2.3]]) b.cylinder(0.45, 0.22, x, 2.03, z, SURF.flat, '#8a7656', 12);
 
+  // The globe's stand, when there is a globe on deck
+  if (!withGlobe) return;
   const g = GLOBE_AT;
   for (let k = 0; k < 3; k++) {
     const a = (k / 3) * Math.PI * 2;
@@ -100,7 +102,7 @@ export function buildShip(heraldry, cv, position, heading) {
   const group = new Group();
   const b = new Builder();
   b.groundY = 2;
-  build(b);
+  build(b, Array.isArray(cv.byPlace?.('ship')?.visited));
   const material = buildingMaterial();
   material.side = DoubleSide;
   const mesh = new Mesh(b.build(), material);

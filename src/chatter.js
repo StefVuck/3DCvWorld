@@ -24,42 +24,38 @@ ANY.push(...WORLD.chatter.filter(l => Array.isArray(l) && l.length >= 2));
 const PLACE = {
   watchtower: [
     ['Anything on the road?', 'A cart, two sheep and a man on a very tall bicycle.', 'Again?'],
-    ['Pigeon’s gone to market.', 'What did it carry?', 'Prices. It always carries prices.'],
     ['You can see the whole valley from up here.', 'All the way to the sea, on a clear day.'],
   ],
   homestead: [
     ['The well’s low.', 'It always says that in summer.'],
-    [`${cv.shortName}’s in the workshop again.`, 'Soldering?', 'Something with very small wires.'],
+    [`${cv.shortName}’s at the desk again.`, 'Working late?', 'Working early. It’s still dark.'],
     ['Have you fed the chickens?', 'Twice. They lie about it.'],
   ],
   abbey: [
     ['Have you finished the copying?', 'Nearly. The margins took longest.'],
     ['Brother Anselm fell asleep in Compline.', 'He says it was contemplation.'],
-    ['The new scholars are arriving.', 'Engineers, the lot of them.', 'Heaven help the bell tower.'],
+    ['The new scholars are arriving.', 'Any good?', 'Ask me at the end of term.'],
   ],
   town: [
-    ['Prices are up at the market house.', 'Up by how much?', 'They’ll tell you to the microsecond.'],
+    ['Prices are up at the market house.', 'Up by how much?', 'Depends who you ask.'],
     ['The crier’s in good voice today.', 'He’s always in good voice. That’s the problem.'],
     ['Seen the master builder’s new crane?', 'The one with the wheel?', 'He walks inside it. Says it’s efficient.'],
-    ['The racing lads are at it again.', 'Covered in grease?', 'Head to toe. Won something, though.'],
     ['Who reads all those ledgers?', 'Someone has to.', 'Someone who likes columns.'],
     ['Mind the cart!', 'I am minding it.', 'Mind it from further away.'],
   ],
   fair: [
     ['How much for the clockwork?', 'More than the apothecary’s tonics.', 'Less than the glazier’s windows, I hope.'],
-    ['The pedlar sells everything.', 'Everything?', 'Nine languages’ worth of everything.'],
-    ['Are you dancing later?', 'Only if the piper plays.'],
-    ['Those three in the green tent haven’t slept.', 'They’ve a candle marked in hours.', 'That explains it.'],
+    ['The pedlar sells everything.', 'Everything?', 'Everything that fits on a cart.'],
     ['Lovely stall.', 'Nicest one here.', 'You say that about all of them.'],
   ],
   mills: [
     ['The wheel’s turning slow.', 'River’s low.', 'Or the wheel’s old.', 'Both, probably.'],
     ['Is that one still under scaffolding?', 'Still building it.', 'They said that last spring.'],
-    ['What’s that one make?', 'Something that measures pints, I’m told.', 'Now that’s useful.'],
+    ['What’s that one make?', 'Something clever, I’m told.', 'They always say that.'],
   ],
   harbour: [
     ['Tide’s turning.', 'Then so am I. Off home.'],
-    ['Will the choir sing tonight?', 'They sing every night.', 'Then yes.'],
+    ['Will the fiddler play tonight?', 'He plays every night.', 'Then yes.'],
     ['The ship’s back.', 'Where from this time?', 'Everywhere, by the look of the flags.'],
     ['Another trophy on the inn shelf.', 'It’ll need a second shelf.'],
   ],
@@ -96,7 +92,7 @@ const SEASONAL = {
 const EVENING = [
   ['Getting dark.', 'Lamps are lit at the inn.', 'Then that’s where I’m going.'],
   ['Late to be out.', 'Late’s when it’s quiet.'],
-  ['Hear that?', 'The choir, down at the harbour.'],
+  ['Hear that?', 'The fiddler, down at the harbour.'],
 ];
 
 const pick = list => list[Math.floor(Math.random() * list.length)];
