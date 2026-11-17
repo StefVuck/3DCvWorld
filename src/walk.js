@@ -55,7 +55,7 @@ export class Walk {
     const touch = matchMedia('(pointer: coarse)').matches;
     this.hint.innerHTML = `<p>${touch
       ? 'Left thumb to walk, right thumb to look.'
-      : 'Click to look about. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk, <kbd>Shift</kbd> to hurry, <kbd>Space</kbd> to hop, <kbd>[</kbd> <kbd>]</kbd> to turn the day, <kbd>1</kbd> to <kbd>7</kbd> or the map to fly elsewhere.'}</p><button class="note-button" type="button">Back to the journey</button>`;
+      : 'Click to look about. <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk, <kbd>Shift</kbd> to hurry, <kbd>Space</kbd> to hop, <kbd>[</kbd> <kbd>]</kbd> to turn the day, the number keys or the map to fly elsewhere.'}</p><button class="note-button" type="button">Back to the journey</button>`;
     this.hint.querySelector('button').addEventListener('click', () => this.onLeave());
     document.body.append(this.hint);
     this.dest = document.createElement('p');
@@ -274,7 +274,7 @@ export class Walk {
     const ignore = e => e.target.closest?.('button, a, input, .minimap, .debug, .walk-hint, .day-compass');
     window.addEventListener('keydown', e => {
       if (!this.on || e.target.closest?.('input')) return;
-      if (/^Digit[1-7]$/.test(e.code)) return this.travel(Number(e.code.slice(5)) - 1);
+      if (/^Digit[1-9]$/.test(e.code) && Number(e.code.slice(5)) <= this.places.length) return this.travel(Number(e.code.slice(5)) - 1);
       this.keys.add(e.code);
       if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     });

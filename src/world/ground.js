@@ -3,7 +3,7 @@ import { CanvasTexture, LinearFilter, Vector4 } from 'three';
 // Each settlement paints its yards, streets and paths into one tile of a shared atlas.
 // R = trodden earth or road, G = tilled soil, B = settlement ground (no fields or hedges).
 export class GroundAtlas {
-  constructor(cols = 4, rows = 2, tile = 512) {
+  constructor(cols = 4, rows = 4, tile = 512) {
     this.cols = cols;
     this.rows = rows;
     this.tile = tile;

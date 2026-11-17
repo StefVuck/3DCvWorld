@@ -1,68 +1,78 @@
 import { Vector3 } from 'three';
 import { anchors } from './world/links.js';
+import { STOPS } from './journey.js';
+import { KITS } from './world/places/index.js';
 
 // On foot, the people of the valley tell you what the panels would: walk up to a guild hall,
 // a stall or a workshop and whoever stands there talks about it, a sentence at a time.
 
 const sentences = text => (text || '').split(/(?<=[.!?])\s+/).filter(Boolean);
 
+// Built-in tellers for the built-in place kits. A kit of your own can export `speakers(h)`
+// instead (see docs/STOPS.md); any other stop gets a local who reads its panel's text.
+const BUILT_IN = {
+  watchtower: (stop, h) => h.add(h.at(-10, 6), 'The watchman', [
+    `This is the valley of ${h.cv.name}.`,
+    ...(h.cv.title ? [`${h.cv.title} by trade.`] : []),
+    h.cv.tagline,
+    'Follow the road south and every place will tell you a little more.',
+  ]),
+  homestead: (stop, h) => h.add(h.at(-2.5, 1.2), h.cv.name, [].concat(stop.content ?? []).filter(x => typeof x === 'string').flatMap(sentences)),
+  abbey: (stop, h) => [].concat(stop.content ?? []).forEach((e, i) => h.add(h.at(42 - i * 6, 10 + i * 4), i ? 'An old schoolmaster' : 'Brother at the abbey', [
+    `${h.N} studied here: ${[e.title, ...[].concat(e.meta ?? [])].filter(Boolean).join(', ')}.`,
+    ...sentences(e.text),
+  ])),
+  town: (stop, h) => [].concat(stop.content ?? []).forEach((job, i) => h.add(anchors.get(`${stop.id}:${i}`)?.pos, `Of the ${job.org} hall`, [
+    `${job.role} at ${job.org}${job.period ? `, ${job.period}` : ''}${job.place === 'Remote' ? ', working remotely' : job.place ? `, in ${job.place}` : ''}.`,
+    ...(job.points || []).flatMap(sentences),
+    ...h.said(`${stop.id}:${job.role}`),
+  ])),
+  fair: (stop, h) => [].concat(stop.content ?? []).forEach((s, i) => h.add(anchors.get(`${stop.id}:${i}`)?.pos, `The ${s.trade || 'stallholder'}`, [
+    `${s.group}, finest in the valley!`,
+    `${s.items.slice(0, -1).join(', ')}${s.items.length > 1 ? ' and ' : ''}${s.items[s.items.length - 1]}.`,
+    ...h.said(`${stop.id}:${s.group}`),
+  ])),
+  mills: (stop, h) => [].concat(stop.content ?? []).forEach((p, i) => h.add(anchors.get(`${stop.id}:${i}`)?.pos, 'A millwright', [
+    `This is ${p.name}${p.period ? `, ${p.period}` : ''}.`,
+    ...sentences(p.description),
+    ...(p.status === 'building' ? ['Still building it, as you can see from the scaffolding.'] : []),
+  ])),
+  // Each interest is told by someone at the harbour; a list of honours by the innkeeper
+  harbour: (stop, h) => {
+    const all = [].concat(stop.content ?? []);
+    const tellers = [[2, 59, 'The choirmaster'], [-10, 72, 'A ferryman'], [14, 66, 'A fisherman'], [-16, 62, 'A boatwright']];
+    all.filter(x => !x.items).slice(0, tellers.length).forEach((x, k) => {
+      const [px, pz, who] = tellers[k];
+      h.add(h.at(px, pz), who, [`${h.N} told me about ${String(x.title).toLowerCase()} once.`, ...sentences(x.text)]);
+    });
+    const honours = all.find(x => x.items);
+    if (honours) h.add(h.at(-2.2, 22.7), 'The innkeeper', ['A trophy on the shelf for every one of them:', ...honours.items.map(([what, how]) => `${what}: ${how}.`), ...h.said(`${stop.id}:${honours.title}`)]);
+  },
+};
+
+// What a panel says, as sentences, for a stop with no teller of its own
+function readAloud(content) {
+  return [].concat(content ?? []).flatMap(x => (typeof x === 'string' ? sentences(x) : x && typeof x === 'object' ? [x.title ?? x.name ?? x.role ?? x.group, x.text ?? x.description].filter(Boolean).flatMap(sentences) : []));
+}
+
 function speakers(cv, places, meshHeight) {
-  const at = (id, x, z) => places.find(p => p.place.id === id)?.place.point(x, 0, z);
   const list = [];
-  // What people say about something written on the subject they are telling you about
-  const said = at => (cv.writings || []).filter(w => w.at === at).map(w => w.said).filter(Boolean);
   const add = (pos, who, lines) => {
+    lines = (lines ?? []).filter(Boolean);
     if (!pos || !lines.length) return;
     list.push({ pos: pos.clone().setY(meshHeight(pos.x, pos.z) + 2.3), who, lines });
   };
-
-  const N = cv.shortName;
-  add(at('watchtower', -10, 6), 'The watchman', [
-    `This is the valley of ${cv.name}.`,
-    ...(cv.title ? [`${cv.title} by trade.`] : []),
-    cv.tagline,
-    'Follow the road south and every place will tell you a little more.',
-  ]);
-  add(at('homestead', -2.5, 1.2), cv.name, cv.about.flatMap(sentences));
-  (cv.education || []).forEach((e, i) => add(at('abbey', 42 - i * 6, 10 + i * 4), i ? 'An old schoolmaster' : 'Brother at the abbey', [
-    `${N} studied here: ${e.degree}, ${e.institution}, ${e.period}.`,
-    ...sentences(e.notes),
-  ]));
-  (cv.experience || []).forEach((job, i) => {
-    const a = anchors.get(`job:${i}`);
-    add(a?.pos, `Of the ${job.org} hall`, [
-      `${job.role} at ${job.org}, ${job.period}${job.place === 'Remote' ? ', working remotely' : job.place ? `, in ${job.place}` : ''}.`,
-      ...(job.points || []).flatMap(sentences),
-      ...said(`job:${job.role}`),
-    ]);
-  });
-  (cv.skills || []).forEach((s, i) => {
-    const a = anchors.get(`skill:${i}`);
-    add(a?.pos, `The ${s.trade || 'stallholder'}`, [
-      `${s.group}, finest in the valley!`,
-      `${s.items.slice(0, -1).join(', ')}${s.items.length > 1 ? ' and ' : ''}${s.items[s.items.length - 1]}.`,
-      ...said(`skill:${s.group}`),
-    ]);
-  });
-  (cv.projects || []).forEach((p, i) => {
-    const a = anchors.get(`project:${i}`);
-    add(a?.pos, 'A millwright', [
-      `This is ${p.name}${p.period ? `, ${p.period}` : ''}.`,
-      ...sentences(p.description),
-      ...(p.status === 'building' ? ['Still building it, as you can see from the scaffolding.'] : []),
-    ]);
-  });
-  const hobbies = cv.interests || [];
-  // Each interest is told by someone at the harbour; a list of honours by the innkeeper, who
-  // keeps the trophies
-  const comps = hobbies.find(h => h.items);
-  const tellers = [[2, 59, 'The choirmaster'], [-10, 72, 'A ferryman'], [14, 66, 'A fisherman'], [-16, 62, 'A boatwright']];
-  hobbies.filter(h => !h.items).slice(0, tellers.length).forEach((h, k) => {
-    const [x, z, who] = tellers[k];
-    add(at('harbour', x, z), who, [`${N} told me about ${h.title.toLowerCase()} once.`, ...sentences(h.text)]);
-  });
-  if (comps) add(at('harbour', -2.2, 22.7), 'The innkeeper', ['A trophy on the shelf for every one of them:', ...comps.items.map(([what, how]) => `${what}: ${how}.`), ...said('competitions')]);
-  if (cv.contact?.blurb) add(at('harbour', 8, 72), 'A sailor', [...sentences(cv.contact.blurb), `You can find ${N} at the end of the journey.`]);
+  const said = at => (cv.writings || []).filter(w => w.at === at).map(w => w.said).filter(Boolean);
+  for (const stop of STOPS) {
+    const built = places.find(p => p.kit === stop.kit);
+    const h = { cv, N: cv.shortName, add, said, sentences, anchors, at: (x, z) => built?.place.point(x, 0, z) };
+    if (KITS[stop.kit]?.speakers) KITS[stop.kit].speakers(stop, h);
+    else if (BUILT_IN[stop.kit]) BUILT_IN[stop.kit](stop, h);
+    else if (built) add(h.at(0, 8), 'A local', readAloud(stop.content));
+  }
+  // At the harbour, a sailor points the way to the last stop
+  const harbour = places.find(p => p.kit === 'harbour'), contact = STOPS.find(s => s.panel === 'contact');
+  if (harbour && contact?.content?.blurb) add(harbour.place.point(8, 0, 72), 'A sailor', [...sentences(contact.content.blurb), `You can find ${cv.shortName} at the end of the journey.`]);
   return list;
 }
 

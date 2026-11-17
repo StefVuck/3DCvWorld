@@ -1,4 +1,6 @@
 import { createNoise2D } from 'simplex-noise';
+import { STOP_SPECS } from '../journey/config.js';
+import { SITE_DEFAULTS, SEA } from '../journey/sites.js';
 
 export function mulberry32(seed) {
   return () => {
@@ -87,15 +89,8 @@ export function forestAt(x, z, h, d, t, tm) {
 
 // Settlements sit on levelled shelves. Each site's level is taken from the raw terrain at
 // its centre, then blended out over `blend` metres beyond the flat radius `r`.
-export const SITES = [
-  { id: 'watchtower', z: -7600, offset: 450, r: 15, blend: 40, lift: 0.5 },
-  { id: 'homestead', z: -4600, offset: 330, r: 52, blend: 75, lift: 1.5 },
-  { id: 'abbey', z: -2800, offset: -720, r: 60, blend: 85, lift: 1 },
-  { id: 'town', z: 600, offset: 160, r: 118, blend: 110, lift: 1.5 },
-  { id: 'fair', z: 2700, offset: -105, r: 60, blend: 70, lift: 0.8 },
-  { id: 'mills', z: 4400, offset: 92, r: 52, blend: 70, lift: 1.2 },
-  { id: 'harbour', z: 7650, offset: 118, r: 62, blend: 80, lift: 2.4 },
-];
+// The settlements the journey uses, each on its flattened shelf (see src/journey/sites.js)
+export const SITES = STOP_SPECS.filter(s => s.place && !SEA.has(s.place)).map(s => ({ blend: 70, lift: 1, r: 50, ...SITE_DEFAULTS[s.place], ...(s.site ?? {}), id: s.place }));
 for (const site of SITES) {
   site.x = riverX(site.z) + site.offset;
   site.y = 0;

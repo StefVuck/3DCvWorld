@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "configure": "node scripts/configure.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "new-stop": "node scripts/new-stop.mjs"
   },
   "dependencies": {
     "i18n-iso-countries": "7.14.0",

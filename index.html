@@ -125,15 +125,15 @@
     .small { font-size: .9rem; color: var(--muted); }
     .visitors { font-style: italic; margin: 0 0 .2rem !important; }
 
-    .stop-hero { min-height: 100vh; padding: 0; align-items: flex-start; justify-content: center; }
-    .stop-hero .panel {
+    .layout-welcome { min-height: 100vh; padding: 0; align-items: flex-start; justify-content: center; }
+    .layout-welcome .panel {
       margin: 13vh auto 0; text-align: center; background: none; border: 0; box-shadow: none; width: min(760px, calc(100% - 32px));
     }
-    .stop-hero h1 { font-size: clamp(2.8rem, 8vw, 5.6rem); line-height: 1; color: #2a241d; text-shadow: 0 0 30px rgba(255,248,232,.8), 0 0 2px rgba(255,248,232,.9); }
-    .stop-hero .kicker { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: .16em; color: #4f463a; margin-bottom: .6rem; text-shadow: 0 0 14px rgba(255,248,232,.9); }
-    .stop-hero .title { font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: clamp(1.2rem, 2.6vw, 1.7rem); margin: .8rem 0 .3rem; text-shadow: 0 0 18px rgba(255,248,232,.9); }
-    .stop-hero .tagline { color: #3e362c; text-shadow: 0 0 16px rgba(255,248,232,.95); }
-    .stop-hero .cue { margin-top: 2.2rem; font-style: italic; color: #4f463a; text-shadow: 0 0 14px rgba(255,248,232,.9); animation: bob 2.6s ease-in-out infinite; }
+    .layout-welcome h1 { font-size: clamp(2.8rem, 8vw, 5.6rem); line-height: 1; color: #2a241d; text-shadow: 0 0 30px rgba(255,248,232,.8), 0 0 2px rgba(255,248,232,.9); }
+    .layout-welcome .kicker { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: .16em; color: #4f463a; margin-bottom: .6rem; text-shadow: 0 0 14px rgba(255,248,232,.9); }
+    .layout-welcome .title { font-family: "IM Fell English", Georgia, serif; font-style: italic; font-size: clamp(1.2rem, 2.6vw, 1.7rem); margin: .8rem 0 .3rem; text-shadow: 0 0 18px rgba(255,248,232,.9); }
+    .layout-welcome .tagline { color: #3e362c; text-shadow: 0 0 16px rgba(255,248,232,.95); }
+    .layout-welcome .cue { margin-top: 2.2rem; font-style: italic; color: #4f463a; text-shadow: 0 0 14px rgba(255,248,232,.9); animation: bob 2.6s ease-in-out infinite; }
     @keyframes bob { 50% { transform: translateY(6px); } }
 
     .minimap { position: fixed; right: 16px; bottom: 16px; z-index: 10; width: 300px; height: 96px; box-shadow: 0 8px 24px rgba(40,30,15,.25); opacity: 0; transition: opacity 1s ease 1s; }
@@ -164,7 +164,7 @@
     body.jumping .panel { transform: translateY(24px); }
     .stop { cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
     .stop .panel { cursor: auto; user-select: text; -webkit-user-select: text; }
-    .stop-hero .panel { pointer-events: none; user-select: none; -webkit-user-select: none; }
+    .layout-welcome .panel { pointer-events: none; user-select: none; -webkit-user-select: none; }
     body.orbiting, body.orbiting .stop { cursor: grabbing; }
     .orbit-hint { font-size: .85rem; color: var(--muted); font-style: italic; margin: .2rem 0 0 !important; }
     .sound-toggle {
@@ -294,7 +294,7 @@
     @media (max-width: 720px) {
       body { font-size: 1.04rem; }
       .stop { align-items: flex-start; padding: 50vh 0 8vh; }
-      .stop-hero { padding: 0; }
+      .layout-welcome { padding: 0; }
       .panel { margin: 0 auto !important; padding: 22px 20px; }
       .panel h2 { font-size: 1.9rem; }
       .minimap { right: 10px; bottom: 64px; transform: scale(.9); transform-origin: bottom right; visibility: hidden; }
@@ -316,7 +316,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .panel { transition: none; opacity: 1; transform: none; }
-      .stop-hero .cue { animation: none; }
+      .layout-welcome .cue { animation: none; }
       .day-compass .coin { transition: none; }
     }
   </style>

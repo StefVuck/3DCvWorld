@@ -13,9 +13,11 @@ export const STALLS = [];
 
 const AWNINGS = [['#a8322d', '#efe6d3'], ['#2f5a8f', '#efe6d3'], ['#3f7a42', '#e9dcb8'], ['#b4652c', '#efe6d3'], ['#6d3f78', '#e9dcb8'], ['#c9a13a', '#7a2a24'], ['#2a5f5a', '#efe6d3'], ['#8a2f4a', '#e9dcb8']];
 
-export function build({ builder, banners, heraldry, cv, wares }) {
+export function build({ builder, banners, heraldry, cv, wares, stop }) {
   const r = mulberry32(44);
-  const groups = (cv.skills || []).slice(0, 8);
+  // The stop's content is a list of skill groups: { group, trade, items }
+  const groups = (Array.isArray(stop.content) ? stop.content : []).slice(0, 8);
+  const stopAt = stopIndex(stop.id);
   const wy = waterLevel(place.site.z) - place.site.y;
   const stalls = [];
   place.build(builder, b => {
@@ -28,7 +30,7 @@ export function build({ builder, banners, heraldry, cv, wares }) {
       STALLS.push([x, z, ry, g.items.length, g.trade]);
       if (g.trade) stalls.push([x, z, ry, g, i]);
       const fx = -Math.cos(a), fz = -Math.sin(a);
-      anchor(`skill:${i}`, stopIndex('skills'), place.point(x, 1.2, z), 5.5, place.point(x + fx * 6.5 + fz * 2, 2.6, z + fz * 6.5 - fx * 2));
+      anchor(`${stop.id}:${i}`, stopAt, place.point(x, 1.2, z), 5.5, place.point(x + fx * 6.5 + fz * 2, 2.6, z + fz * 6.5 - fx * 2));
       b.beam([x * 1.2, 0, z * 1.2 + 1.2], [x * 1.2, 5.5, z * 1.2 + 1.2], 0.08);
       banners.add({ pos: place.point(x * 1.2, 5.4, z * 1.2 + 1.2), along: place.dir(1, 0.4), width: 2.2, height: 0.9, uv: heraldry.banner(g.group, 'pennant'), mode: 'flag' });
     });
@@ -63,14 +65,14 @@ export function build({ builder, banners, heraldry, cv, wares }) {
   // Writing about a stall's skills lies on its counter: a ledger of instructions, or a deck of
   // punched cards on the pedlar's cart
   for (const [x, z, ry, g] of stalls) {
-    const w = (cv.writings || []).find(v => v.at === `skill:${g.group}`);
+    const w = (cv.writings || []).find(v => v.at === `${stop.id}:${g.group}`);
     if (!w) continue;
     const frame = place.matrix.clone().multiply(at(x, 0, z, ry));
     const spot = g.trade === 'pedlar' ? [1.22, 0.78, 0.18] : [-1.76, 0.9, 0.95];
     builder.groundY = place.site.y;
     builder.group(frame, s => (g.trade === 'pedlar' ? punchedCards : ledger)(s, ...spot, 0.25));
     const local = (lx, ly, lz) => new Vector3(lx, ly, lz).applyMatrix4(frame);
-    anchor(`writing:${w.id}`, stopIndex('skills'), local(spot[0], spot[1] + 0.1, spot[2]), 2, local(spot[0] + 0.5, spot[1] + 1.5, spot[2] + 3.2));
+    anchor(`writing:${w.id}`, stopAt, local(spot[0], spot[1] + 0.1, spot[2]), 2, local(spot[0] + 0.5, spot[1] + 1.5, spot[2] + 3.2));
   }
 
   const extras = [];

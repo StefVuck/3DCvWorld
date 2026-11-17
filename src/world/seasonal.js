@@ -225,7 +225,7 @@ export function buildSeasonal({ places, builder, people, carts, meshHeight }) {
   const town = byId('town'), home = byId('homestead'), abbey = byId('abbey'), fair = byId('fair');
 
   // December: a Yule tree in the square with carollers in front of it
-  {
+  if (town) {
     const w = spot(town, 0, -13, 5.6);
     w.y = ground(w);
     let lights;
@@ -246,22 +246,22 @@ export function buildSeasonal({ places, builder, people, carts, meshHeight }) {
 
   // Winter: snowmen about the valley, children playing round the one in town
   {
-    const where = [[town, 18, 30], [home, -9, 16], [abbey, 30, 22], [fair, -12, 12]].map(([p, x, z]) => ({ p, w: spot(p, x, z, 1.6) }));
+    const where = [[town, 18, 30], [home, -9, 16], [abbey, 30, 22], [fair, -12, 12]].filter(([p]) => p).map(([p, x, z]) => ({ p, w: spot(p, x, z, 1.6) }));
     for (const { w } of where) w.y = ground(w);
-    make('season:snow', b => {
+    if (where.length) make('season:snow', b => {
       where.forEach(({ p, w }, i) => {
         const at0 = b.parts.length;
         snowman(b, w.x, w.z, facing(w, p.place.centre) + (i - 1.5) * 0.3, i === 0 ? 1.1 : 0.95);
         for (let k = at0; k < b.parts.length; k++) b.parts[k].translate(0, w.y, 0);
       });
     }, where.map(e => e.w));
-    const t = where[0].w;
+    const t = where[0]?.w;
     people.tag = 'season:snow';
-    for (let i = 0; i < 4; i++) people.add({ mode: MODE.circle, a: t.clone(), radius: 2.4, speed: 1.6, arms: 1, phase: i / 4, color: ['#a8322d', '#2f5a8f', '#c9a13a', '#3f7a42'][i], accent: '#efe6d3', scale: 0.62 });
+    if (t && town) for (let i = 0; i < 4; i++) people.add({ mode: MODE.circle, a: t.clone(), radius: 2.4, speed: 1.6, arms: 1, phase: i / 4, color: ['#a8322d', '#2f5a8f', '#c9a13a', '#3f7a42'][i], accent: '#efe6d3', scale: 0.62 });
   }
 
   // November: a bonfire on the green inside the town walls, and fireworks over the roofs
-  {
+  if (town) {
     const w = spot(town, -66, 14, 11);
     w.y = ground(w);
     make('season:bonfire', b => { bonfire(b, w.x, w.z); grow(b, w, FIRE); }, [w]);
@@ -282,7 +282,7 @@ export function buildSeasonal({ places, builder, people, carts, meshHeight }) {
 
   // September and October: the harvest, sheaves stooked in the homestead's field and a stall of
   // apples and squashes in the town square
-  {
+  if (home && town) {
     const field = home.place.point(-20, 0, 7);
     const stooks = [];
     for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
@@ -304,7 +304,7 @@ export function buildSeasonal({ places, builder, people, carts, meshHeight }) {
   }
 
   // Summer: haymaking by the homestead
-  {
+  if (home) {
     const stacks = [[-19, 6], [-25, 2], [-15, 11]].map(([x, z]) => { const s = home.place.point(x, 0, z); s.y = ground(s); return s; });
     make('season:hay', b => {
       stacks.forEach((s, i) => { const k = b.parts.length; haystack(b, s.x, s.z, 0.9 + i * 0.1); for (let q = k; q < b.parts.length; q++) b.parts[q].translate(0, s.y, 0); });
@@ -313,7 +313,7 @@ export function buildSeasonal({ places, builder, people, carts, meshHeight }) {
   }
 
   // March and April: sowers walking the furrows of the homestead's field
-  {
+  if (home) {
     people.tag = 'season:sowing';
     for (let i = 0; i < 3; i++) {
       const a = home.place.point(-13 - i * 4, 0, 1), b = home.place.point(-19 - i * 4, 0, 13);

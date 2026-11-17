@@ -6,7 +6,8 @@ import { SITES } from '../valley.js';
 export class Place {
   constructor(id, rot) {
     this.id = id;
-    this.site = SITES.find(s => s.id === id);
+    // A kit the journey does not use has no site; it is never built, so it waits out of the way
+    this.site = SITES.find(s => s.id === id) ?? { id, x: 0, y: -1e5, z: 0, r: 0, unused: true };
     this.rot = rot;
     this.cr = Math.cos(rot);
     this.sr = Math.sin(rot);

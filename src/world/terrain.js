@@ -96,7 +96,7 @@ export function buildTerrain({ nx = 640, nz = 1100, heightTex, heightBounds, can
       uCanopyTex: canopy.uniform,
       uCanopyBounds: { value: canopy.bounds },
       uSiteAtlas: { value: null },
-      uSiteBounds: { value: Array.from({ length: 8 }, () => new Vector4(0, 0, 1, 1)) },
+      uSiteBounds: { value: Array.from({ length: 16 }, () => new Vector4(0, 0, 1, 1)) },
       uSiteCount: { value: 0 },
       uCropTex: { value: null },
       uCropRect: { value: new Vector4(0, 0, 1, 0) },
@@ -126,12 +126,12 @@ export function buildTerrain({ nx = 640, nz = 1100, heightTex, heightBounds, can
       uniform sampler2D uCanopyTex;
       uniform vec4 uCanopyBounds;
       uniform sampler2D uSiteAtlas;
-      uniform vec4 uSiteBounds[8];
+      uniform vec4 uSiteBounds[16];
       uniform int uSiteCount;
 
       vec3 siteSample(vec2 xz) {
         vec3 s = vec3(0.0);
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 16; i++) {
           if (i >= uSiteCount) break;
           vec2 uv = (xz - uSiteBounds[i].xy) / uSiteBounds[i].zw;
           if (uv.x > 0.002 && uv.y > 0.002 && uv.x < 0.998 && uv.y < 0.998) {

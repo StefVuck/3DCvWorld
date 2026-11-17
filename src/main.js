@@ -33,7 +33,7 @@ import { showVisitors } from './visitors.js';
 import { LocalShadow } from './world/shadows.js';
 import { Reflection } from './world/reflection.js';
 import { STOPS, Journey } from './journey.js';
-import { buildPanels } from './panels.js';
+import { buildPanels, pruneVisits } from './panels.js';
 import { Minimap } from './minimap.js';
 import cv from './cv.js';
 import { Q, LOW } from './quality.js';
@@ -90,12 +90,18 @@ const staticCasters = [];
 
 function stopViews() {
   const v = (pos, look) => ({ pos: pos.clone(), look: look.clone() });
-  const wt = places[0].place;
   return STOPS.map(s => {
-    if (s.id === 'hero') return { ...v(wt.point(-70, 16, 10), wt.point(420, -40, 150)), subject: wt.point(0, 14, 0), frame: -0.3 };
     if (s.view) return v(new Vector3(), new Vector3(0, 0, 1));
     const p = places[s.place];
-    return { ...v(p.view.pos, p.view.look), subject: p.view.subject ?? p.place.point(0, 5, 0) };
+    if (!p) return v(new Vector3(0, 200, -9000), new Vector3(0, 0, 0));
+    // A stop can frame itself with `camera` ({ pos, look, subject } in the place's own frame);
+    // otherwise the place kit's view is used (its wide welcome view on the opening stop)
+    if (s.camera) {
+      const pt = a => p.place.point(...a);
+      return { ...v(pt(s.camera.pos), pt(s.camera.look)), subject: s.camera.subject ? pt(s.camera.subject) : pt(s.camera.look) };
+    }
+    const view = (s.panel === 'welcome' && p.welcomeView) || p.view;
+    return { ...v(view.pos, view.look), subject: view.subject ?? p.place.point(0, 5, 0), ...(view.frame !== undefined ? { frame: view.frame } : {}) };
   });
 }
 
@@ -203,7 +209,7 @@ async function build() {
   minimap = new Minimap(document.querySelector('.minimap'), STOPS, journey.views, i => goToStop(i));
   ship.update(0);
   if (travelStop >= 0) minimap.setMarker(travelStop, ship.group.position.x, ship.group.position.z);
-  minimap.setMarker(STOPS.findIndex(s => s.view === 'coast'), ship.group.position.x + 250, ship.group.position.z + 500);
+  if (coastStop >= 0) minimap.setMarker(coastStop, ship.group.position.x + 250, ship.group.position.z + 500);
 
   for (const g of [folk, flocks, traffic]) for (const m of g.children) m.userData.placeIndex = places.findIndex(p => p.place.id === m.userData.tag);
   // Nothing in the valley moves except through its shaders, so world matrices are fixed once
@@ -513,6 +519,7 @@ function snapInput() {
 
 const travelStop = STOPS.findIndex(s => s.view === 'voyage');
 const coastStop = STOPS.findIndex(s => s.view === 'coast');
+const SHIP_FROM = Math.min(...[travelStop, coastStop].filter(i => i >= 0), Infinity);
 // The ship rocks every frame, so its views follow it; these run each frame from the Travel stop
 // on and reuse their vectors rather than allocating new ones
 const SV = Array.from({ length: 9 }, () => new Vector3());
@@ -520,8 +527,9 @@ let lighthouse;
 function shipViews() {
   const g = ship.group, [a, b, c, at, away, side, from, look, sub] = SV;
   if (travelStop >= 0) journey.setView(travelStop, g.localToWorld(a.set(-12.9, 6.9, 3.4)), g.localToWorld(b.set(-8.9, 5.1, -1.3)), g.localToWorld(c.copy(GLOBE_AT)));
-  lighthouse ??= places.find(p => p.lighthouse)?.lighthouse ?? false;
-  if (!lighthouse) return;
+  // The coast view looks back past the ship towards the lighthouse, or where the harbour would be
+  lighthouse ??= places.find(p => p.lighthouse)?.lighthouse ?? new Vector3(riverX(7650) + 118, 20, 7650);
+  if (coastStop < 0) return;
   at.copy(g.position).setY(4);
   away.copy(at).sub(lighthouse).setY(0).normalize();
   side.set(-away.z, 0, away.x);
@@ -533,7 +541,7 @@ function shipViews() {
 }
 
 function applyScroll(y) {
-  if (active >= (travelStop >= 0 ? travelStop : coastStop) - 1) shipViews();
+  if (active >= SHIP_FROM - 1) shipViews();
   const loc = journey.locate(y);
   if (reduceMotion && loc.travel) {
     loc.i = loc.t < 0.5 ? loc.i : loc.i + 1;
@@ -730,7 +738,7 @@ const choir = { linger: 0 };
 function updateChoir(dt) {
   const gate = lore.choir?.get('choir')?.uniforms.uGate;
   if (!gate) return 0;
-  const here = !lastLoc.travel && STOPS[lastLoc.i]?.place === 2;
+  const here = !lastLoc.travel && STOPS[lastLoc.i]?.kit === 'abbey';
   choir.linger = here ? choir.linger + dt : 0;
   gate.value += ((choir.linger > 3.5 ? 1 : 0) - gate.value) * Math.min(1, dt * 1.2);
   return gate.value;
@@ -1039,6 +1047,7 @@ function observePanels() {
     await build();
     await document.fonts?.ready;
     lore.signs.draw();
+    pruneVisits(anchors);
     journey.measure();
     new ResizeObserver(() => journey.measure()).observe(document.querySelector('#journey'));
     globeHover();

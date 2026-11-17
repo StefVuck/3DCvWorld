@@ -12,5 +12,4 @@ export const WORLD = {
   walk: w.walk ?? true,
   chatter: w.chatter ?? [],
 };
-export const SECTIONS = config.sections ?? {};
 export const SITE = config.site ?? {};

@@ -1,24 +1,19 @@
 import { Vector3, Quaternion, Matrix4, MathUtils } from 'three';
-import { SECTIONS } from './world-config.js';
+import { STOP_SPECS, ACTIVE_PLACES } from './journey/config.js';
+import { REFLECTIVE } from './journey/sites.js';
 
-const ALL_STOPS = [
-  { id: 'hero', place: 0, time: 0.05, side: 'centre', title: 'Welcome', placeName: 'The Watchtower' },
-  { id: 'about', place: 1, time: 0.17, side: 'left', title: 'About', placeName: 'The Homestead' },
-  { id: 'education', place: 2, time: 0.27, side: 'left', title: 'Education', placeName: 'The Abbey' },
-  { id: 'experience', place: 3, time: 0.37, side: 'left', title: 'Experience', placeName: 'The Guild Town' },
-  { id: 'skills', place: 4, time: 0.47, side: 'left', title: 'Skills', placeName: 'The Fair' },
-  { id: 'projects', place: 5, time: 0.58, side: 'left', title: 'Projects', placeName: 'The Mills', reflect: true },
-  { id: 'interests', place: 6, time: 0.68, side: 'left', title: 'Interests', placeName: 'The Harbour Inn', reflect: true },
-  { id: 'travel', view: 'voyage', time: 0.73, side: 'left', title: 'Travel', placeName: 'The Voyage', reflect: true },
-  { id: 'contact', view: 'coast', time: 0.83, side: 'left', title: 'Contact', placeName: 'The Coast at Nightfall', reflect: true },
-];
-
-// The welcome and contact stops always stay; the others can be renamed or switched off in
-// world.config.js
-export const STOPS = ALL_STOPS
-  .filter(s => s.id === 'hero' || s.id === 'contact' || SECTIONS[s.id]?.show !== false)
-  .map(s => ({ ...s, ...(SECTIONS[s.id]?.title ? { title: SECTIONS[s.id].title } : {}), ...(SECTIONS[s.id]?.placeName ? { placeName: SECTIONS[s.id].placeName } : {}) }));
+// The stops of the journey, from world.config.js. `place` is the index of the settlement the stop
+// visits among those built (in the order they are met), and the two stops at sea are told apart by
+// `view`. `kit` names the place kit and `panel` the layout that shows the stop's content.
+export const STOPS = STOP_SPECS.map(s => ({
+  ...s,
+  kit: s.place,
+  place: s.place && ACTIVE_PLACES.includes(s.place) ? ACTIVE_PLACES.indexOf(s.place) : undefined,
+  view: s.place === 'ship' ? 'voyage' : s.place === 'coast' ? 'coast' : undefined,
+  reflect: REFLECTIVE.has(s.place),
+}));
 export const stopIndex = id => STOPS.findIndex(s => s.id === id);
+export const stopOfKit = kit => STOPS.find(s => s.kit === kit);
 
 const UP = new Vector3(0, 1, 0);
 const m4 = new Matrix4();

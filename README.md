@@ -2,7 +2,7 @@
 
 A CV told as a journey down a painted 3D river valley. Scrolling flies the camera from a watchtower in the mountains, past a homestead, an abbey, a guild town, a fair, the mills and a harbour inn, out to a ship at sea and the coast at nightfall, while the day passes from dawn to night. Each place is a section of your CV, and the world is built from what you put in it: every job raises a guild hall in the town, every skill group gets a stall at the fair, and your projects become workshops by the river.
 
-It is a template. Everything that makes it yours lives in one file, `world.config.js`, and a configure step can fill that file in for you.
+It is a template, and the journey is not fixed. It is a list of stops: each pairs a **place kit** (the settlement that builds it in the valley) with a **panel layout** (how it shows on the page) and gives them its content. Stops can be reordered, renamed, removed, or added with a settlement of their own (`npm run new-stop`). Everything that makes it yours lives in `world.config.js`, and a configure step can fill that file in for you.
 
 Built with [Three.js](https://threejs.org/) and [Vite](https://vitejs.dev/). There are no 3D models or textures to download: the whole valley is generated in code when the page loads.
 
@@ -13,6 +13,7 @@ npm install
 npm run configure   # answer a few questions (or import a JSON Resume)
 npm run check       # look the config over
 npm run dev         # open the valley at http://localhost:5173
+npm run new-stop    # add a stop of your own, with a new settlement and panel
 ```
 
 The repository ships with a fictional example person, so `npm run dev` works straight away if you want to look around first.
@@ -24,7 +25,7 @@ The repository ships with a fictional example person, so `npm run dev` works str
 `npm run configure` walks through:
 - **You:** your name, the short name townsfolk use for you, title, location and tagline.
 - **The site:** its address and description, for link previews.
-- **The journey:** which stops to show, and optionally a new title and place name for each.
+- **The journey:** which stops to show, and optionally a new title and place name for each. New stops are added with `npm run new-stop` (below).
 - **The world:**
   - the time of year;
   - the initials ploughed into a field;
@@ -44,34 +45,54 @@ npm run configure -- --quick      # only the questions about you; keep the world
 
 ### Editing `world.config.js`
 
-Everything the configure step writes, and a little more, can be edited by hand. `world.config.example.js` is a fully commented copy of the example: start there to see every option. In outline:
+Everything the configure step writes, and a little more, can be edited by hand. `world.config.example.js` is a fully commented copy of the example: start there to see every option.
 
 | Key | What it does |
 |---|---|
 | `site` | The address (for link previews), description and language |
 | `person` | Name, short name, title, location, tagline |
-| `sections` | Per stop: `title`, `placeName`, a `quote` shown over the landscape, and `show: false` to skip it (the welcome and contact stops always stay) |
-| `about`, `education`, `experience`, `skills`, `projects`, `interests`, `travel`, `contact` | The content of each stop |
-| `writings` | Articles or posts, shown as pencilled margin notes beside the entry they are about, each with an object in the valley |
+| `journey` | The stops, in order. Each has an `id`, a `place` kit, a `panel` layout, its `content`, a `title`, `placeName` and `quote`, and optionally `time`, `camera`, `site` or `show: false` |
+| `writings` | Articles or posts, shown as pencilled margin notes beside the entry they are about (`at: '<stop id>:<entry title>'`), each with an object in the valley |
 | `world` | Season, flags, initials, dance colours, racing livery, Easter eggs, walking, extra chatter |
 
-How content becomes the world:
+What the built-in place kits make of their content:
 
-- **Experience:** each job raises a guild hall in the town, up to six. Its `trade` chooses what is built outside:
+- **`town`:** a guild hall for each of the first six items, typically jobs. Its `trade` chooses what is built outside:
   - `exchange`: a market house with traders haggling;
-  - `school`: a schoolroom with a blackboard;
-  - `lodge`: a master builder's lodge with a crane;
+  - `school`: a schoolroom;
+  - `lodge`: a master builder's crane;
   - `ledger`: a clerks' hall;
-  - `racing`: a workshop with a race car, plus a racer on the roads in your livery.
+  - `racing`: a race car, plus a racer on the roads in your livery.
 
-  An optional `logo` (an image in `public/`) goes on the hall's banners and shield.
-- **Skills:** each group is a stall at the fair, up to eight, with every item as its own object on the counter. Its `trade` dresses the stall: `clockmaker`, `apothecary`, `glazier`, `cooper` or `pedlar`. Hovering a skill on the panel lifts its object.
-- **Projects:** the first six become workshops at the mills, under scaffolding while `status` is `'building'`. An `emblem` adds something outside: a `clock`, a `tavern`, a `dyer` (dyed cloth showing your `languages`), a `press` or an `orrery`.
-- **Interests:** told at the harbour inn. A list of honours becomes trophies on the shelf by the door.
-- **Travel:** two-letter country codes, lit on a globe aboard the ship.
-- **Writings:** a pamphlet by the trophies, a ledger on a stall counter (punched cards on the pedlar's cart) or chalk on the school's blackboard, depending on what each piece is about.
+  An optional `logo` (an image in `public/`) goes on its banners and shield.
+- **`fair`:** a stall for each of the first eight groups, with every item as its own object on the counter. `trade` dresses the stall: `clockmaker`, `apothecary`, `glazier`, `cooper` or `pedlar`.
+- **`mills`:** a workshop for each of the first six projects, under scaffolding while `status` is `'building'`. An `emblem` adds a `clock`, `tavern`, `dyer` (cloth dyed in your `languages`), `press` or `orrery`.
+- **`harbour`:** the inn, where a list of honours becomes trophies by the door.
+- **`ship`:** a globe that lights the countries visited.
+- **`watchtower`, `homestead`, `abbey`, `coast`:** settings that read no content.
 
-`npm run check` points out anything that will not show up as you might expect: unknown trades, a writing whose `at` matches nothing, more jobs than halls, bad country codes or colours.
+### Adding stops of your own
+
+```sh
+npm run new-stop
+```
+
+It makes a new place kit and a new panel layout from templates, finds the new settlement a spot in the valley between its neighbours, and adds the stop to `world.config.js`. The new stop works straight away:
+- a house, tables and people;
+- a camera view, a map marker and Visit buttons;
+- someone to tell it in walk mode.
+
+Both files are then yours to change. A new stop can also reuse any existing layout (`entries` suits most lists), and any kit can be paired with any layout.
+
+[docs/STOPS.md](docs/STOPS.md) explains how stops, place kits and panel layouts fit together, and the building blocks for making your own.
+
+`npm run check` points out anything that will not work or show up as you might expect:
+- a place kit or layout that does not exist;
+- a settlement used twice, or two standing on top of each other;
+- unknown trades;
+- a writing whose `at` matches nothing;
+- more items than buildings;
+- bad country codes or colours.
 
 ## What visitors can do
 
@@ -80,7 +101,7 @@ How content becomes the world:
 - **Drag** to orbit round the current stop, and double-click to recentre.
 - **Visit:** hall, stall, workshop and writing entries have a button that flies to their place in the valley.
 - **Explore on foot:** the contact stop's "Explore more on foot" button, or `?walk`, starts first-person walking from the town.
-  - **Controls:** WASD to move, mouse to look, Shift to hurry, Space to hop, `[` and `]` to turn the day, and 1 to 7 (or the map) to fly to another settlement.
+  - **Controls:** WASD to move, mouse to look, Shift to hurry, Space to hop, `[` and `]` to turn the day, and the number keys (or the map) to fly to another settlement.
   - **Places:** you can go inside the inn and the guild halls, and climb the watchtower.
   - **People:** the townsfolk tell you your CV and chat among themselves.
 - **Sound:** a quiet soundscape for each stop, off until switched on.
@@ -143,11 +164,10 @@ The page uses relative paths, so it works at a sub-path such as `https://you.git
 
 ## Going further
 
-The settlements are code, not data. Each one is a module in `src/world/places/` and can be changed freely:
-- `town.js`: the guild halls and what each trade builds;
-- `fair.js` and `src/world/wares.js`: the stalls and the object for each skill;
-- `mills.js`: the workshops;
-- `harbour.js`: the inn and its taproom.
+- **Settlements** are modules in `src/world/places/`, one per place kit.
+- **Panel layouts** are modules in `src/panels/`.
+
+Both are found automatically, and both can be edited or added to; see [docs/STOPS.md](docs/STOPS.md).
 
 The townsfolk's conversation lines are in `src/chatter.js`. Extra lines can also be added without touching code, in `world.chatter`.
 

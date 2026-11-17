@@ -6,18 +6,18 @@ export const TRADES = {
   emblem: ['clock', 'tavern', 'dyer', 'press', 'orrery'],
 };
 
-export const SECTION_IDS = ['about', 'education', 'experience', 'skills', 'projects', 'interests', 'travel', 'contact'];
-
-export const DEFAULT_SECTIONS = {
-  about: { title: 'About', placeName: 'The Homestead' },
-  education: { title: 'Education', placeName: 'The Abbey' },
-  experience: { title: 'Experience', placeName: 'The Guild Town' },
-  skills: { title: 'Skills', placeName: 'The Fair' },
-  projects: { title: 'Projects', placeName: 'The Mills' },
-  interests: { title: 'Interests', placeName: 'The Harbour Inn' },
-  travel: { title: 'Travel', placeName: 'The Voyage' },
-  contact: { title: 'Contact', placeName: 'The Coast at Nightfall' },
-};
+// The built-in journey: which place kit and panel layout each stop uses, and its usual names
+export const BUILT_IN_STOPS = [
+  { id: 'hero', place: 'watchtower', panel: 'welcome', title: 'Welcome', placeName: 'The Watchtower' },
+  { id: 'about', place: 'homestead', panel: 'prose', title: 'About', placeName: 'The Homestead' },
+  { id: 'education', place: 'abbey', panel: 'entries', title: 'Education', placeName: 'The Abbey' },
+  { id: 'experience', place: 'town', panel: 'halls', title: 'Experience', placeName: 'The Guild Town' },
+  { id: 'skills', place: 'fair', panel: 'stalls', title: 'Skills', placeName: 'The Fair' },
+  { id: 'projects', place: 'mills', panel: 'workshops', title: 'Projects', placeName: 'The Mills' },
+  { id: 'interests', place: 'harbour', panel: 'interests', title: 'Interests', placeName: 'The Harbour Inn' },
+  { id: 'travel', place: 'ship', panel: 'globe', title: 'Travel', placeName: 'The Voyage' },
+  { id: 'contact', place: 'coast', panel: 'contact', title: 'Contact', placeName: 'The Coast at Nightfall' },
+];
 
 // Flags that can be drawn from stripes and crosses, offered by name when configuring
 export const FLAG_PRESETS = {
@@ -81,7 +81,7 @@ const period = (a, b) => (a ? `${date(a)} – ${b ? date(b) : 'Present'}` : date
 export function fromJsonResume(r) {
   const b = r.basics ?? {};
   const loc = b.location ?? {};
-  const out = {
+  const parts = {
     person: {
       name: b.name ?? '',
       shortName: (b.name ?? '').split(/\s+/)[0] ?? '',
@@ -91,10 +91,9 @@ export function fromJsonResume(r) {
     },
     about: (b.summary ?? '').split(/\n\s*\n/).map(s => s.trim()).filter(Boolean),
     education: (r.education ?? []).map(e => ({
-      degree: [e.studyType, e.area].filter(Boolean).join(' '),
-      institution: e.institution ?? '',
-      period: period(e.startDate, e.endDate),
-      notes: [e.score, ...(e.courses ?? [])].filter(Boolean).join('. ') + ((e.score || e.courses?.length) ? '.' : ''),
+      title: [e.studyType, e.area].filter(Boolean).join(' '),
+      meta: [e.institution ?? '', period(e.startDate, e.endDate)].filter(Boolean),
+      text: [e.score, ...(e.courses ?? [])].filter(Boolean).join('. ') + ((e.score || e.courses?.length) ? '.' : ''),
       ...(e.url ? { link: e.url } : {}),
     })),
     experience: [...(r.work ?? []), ...(r.volunteer ?? []).map(v => ({ ...v, name: v.organization }))].map(w => ({
@@ -128,6 +127,12 @@ export function fromJsonResume(r) {
         ...(b.profiles ?? []).map(p => ({ label: p.network ?? 'Profile', text: p.username ? `@${p.username}` : (p.url ?? ''), href: p.url ?? '' })),
       ],
     },
+  };
+  const content = { about: parts.about, education: parts.education, experience: parts.experience, skills: parts.skills, projects: parts.projects, interests: parts.interests, contact: parts.contact };
+  const out = {
+    person: parts.person,
+    journey: BUILT_IN_STOPS.map(s => (content[s.id] ? { ...s, content: content[s.id] } : s.id === 'travel' ? { ...s, content: { visited: [], wishlist: [] } } : s)),
+    writings: parts.writings,
   };
   return out;
 }

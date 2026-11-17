@@ -338,7 +338,8 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   const areas = new Areas();
   const meshes = [];
   const items = [];
-  const place = id => places.find(p => p.place.id === id).place;
+  // A settlement by its kit name, or undefined if the journey does not visit it
+  const place = id => places.find(p => p.place.id === id)?.place;
   const ground = (x, z) => meshHeight(x, z);
   const share = LOW ? 0.5 : 1;
 
@@ -358,7 +359,8 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   }).filter(Boolean);
 
   // Roads, their signposts, and the travellers on them
-  const ROUTE = ['watchtower', 'homestead', 'town', 'mills', 'harbour'];
+  // A road joins the settlements on the east bank, in the order they come down the valley
+  const ROUTE = SITES.filter(s => s.offset > 0).sort((a, b) => a.z - b.z).map(s => s.id);
   const names = Object.fromEntries(places.map((p, k) => [p.place.id, STOPS.find(s => s.place === k)?.placeName ?? p.name]));
   const signs = new Signs();
   const roads = [];
@@ -382,7 +384,8 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
     const d = b.clone().sub(a).setY(0).normalize(), s = new Vector3(-d.z, 0, d.x);
     return [a.addScaledVector(s, lateral), b.addScaledVector(s, lateral)];
   };
-  const [wh, ht, tm, mh] = roads;
+  const wh = roads[0], ht = roads[1] ?? roads[0], tm = roads[2] ?? roads.at(-1), mh = roads.at(-1);
+  if (roads.length) {
   carts.tag = 'road-homestead';
   carts.add(...chunk(wh, 0.82, 0.97, 0.9), { speed: 1.3, horse: '#8a6a4c' });
   carts.tag = 'road-town-north';
@@ -404,6 +407,7 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   people.tag = 'road-pilgrims';
   const pil = chunk(ht, 0.9, 0.96, 0.6);
   for (let i = 0; i < 3; i++) people.add({ mode: MODE.walk, a: pil[0].clone(), b: pil[1].clone(), speed: 0.8, phase: 0.5 + i * 0.012, color: ['#6b5a48', '#d6cebd', '#5e4c3a'][i], accent: '#d6cebd', scale: 0.95 });
+  }
 
   // Life on the river: boats and barges drifting down, a ferry, anglers and a heron
   const boats = riverCraft([Math.round(4 * share), Math.round(2 * share)]);
@@ -479,18 +483,18 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   // --- Easter eggs -----------------------------------------------------------------------------
   // A choir in the abbey cloister that starts singing when you linger
   const abbey = place('abbey');
-  if (WORLD.eggs.choir) for (const [rad, n] of [[4.2, 6], [5.6, 7]]) {
+  if (WORLD.eggs.choir && abbey) for (const [rad, n] of [[4.2, 6], [5.6, 7]]) {
     for (let i = 0; i < n; i++) {
       const a = -0.8 + (i / (n - 1)) * 1.6, x = 2 + Math.sin(a) * rad, z = 17 - Math.cos(a) * rad;
       people.add({ mode: MODE.sing, a: abbey.point(x, 0, z), heading: Math.atan2(2 - x, 17 - z) + abbey.rot, color: i % 2 ? '#2f3f6a' : '#5a2a4a', accent: '#efe9dc', phase: i * 0.11 + rad, scale: 0.94, gate: 'choir' });
     }
   }
-  if (WORLD.eggs.choir) people.add({ mode: MODE.conduct, a: abbey.point(2, 0, 16.2), heading: Math.PI + abbey.rot, color: '#1c1a17', accent: '#efe9dc', gate: 'choir' });
+  if (WORLD.eggs.choir && abbey) people.add({ mode: MODE.conduct, a: abbey.point(2, 0, 16.2), heading: Math.PI + abbey.rot, color: '#1c1a17', accent: '#efe9dc', gate: 'choir' });
 
   // A circle dance at the fair in the real evening, beside a flag, and a piper on the watchtower
   const fair = place('fair');
   const tower = place('watchtower');
-  if (WORLD.eggs.dance) {
+  if (WORLD.eggs.dance && fair) {
     people.tag = 'dance';
     const colours = WORLD.dance.colours;
     for (let i = 0; i < 12; i++) people.add({ mode: MODE.circle, a: fair.point(-24, 0, -6), radius: 5.2, speed: 0.75, arms: 0.3, phase: i / 14, color: colours[i % colours.length], accent: '#efe6d3', scale: 0.92 });
@@ -499,6 +503,8 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
       areas.build('dance', b => b.beam([fair.point(-31, 0, -8).x, fair.site.y, fair.point(-31, 0, -8).z], [fair.point(-31, 0, -8).x, fair.site.y + 5.5, fair.point(-31, 0, -8).z], 0.08), fair.site.y);
       banners.add({ pos: fair.point(-31, 5.4, -8), along: fair.dir(1, 0.3), width: 2.6, height: 1.4, uv: heraldry.flag('dance-flag', flag.shape ?? 'pennant', drawFlag(flag)), mode: 'flag' });
     }
+  }
+  if (WORLD.eggs.dance && tower) {
     people.tag = 'watchtower';
     people.add({ mode: MODE.pipe, a: tower.point(-2.3, 15.4, 1.3), heading: Math.PI / 2 + tower.rot, color: '#1f4a3a', accent: '#1c1a17' });
     const chest = tower.point(-2.02, 16.95, 1.3), drone = tower.point(-2.3, 18.4, 1.0);
@@ -510,7 +516,7 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
 
   // Carrier pigeons, now and then, from the watchtower to the market house
   const market = HALLS.find(h => h.trade === 'exchange');
-  if (market && WORLD.eggs.pigeons) {
+  if (market && WORLD.eggs.pigeons && tower && place('town')) {
     const town = place('town');
     birds.tag = 'pigeons';
     birds.courier({ from: tower.point(0, 18, 0), to: town.point(market.x, 9, market.z), count: LOW ? 2 : 4, speed: 34 });
@@ -518,7 +524,7 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
 
   // Skiing on the winter snowfields at the head of the valley, in view of the watchtower; the
   // skier is only shown in winter
-  {
+  if (tower) {
     const eye = tower.point(-70, 16, 10), look = tower.point(420, -40, 150).sub(eye).setY(0).normalize();
     let spot = null;
     for (let d = 500; d < 3500 && !spot; d += 100) {
@@ -540,8 +546,8 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   // A field ploughed into circuit traces round your initials, north of the town, readable from
   // the town's height
   const town = place('town');
-  const crop = town.point(-40, 0, -200);
-  if (WORLD.eggs.cropMark && WORLD.initials) {
+  if (town && WORLD.eggs.cropMark && WORLD.initials) {
+    const crop = town.point(-40, 0, -200);
     terrain.material.uniforms.uCropTex.value = cropPattern(WORLD.initials);
     terrain.material.uniforms.uCropRect.value.set(crop.x, crop.z, 120, town.rot);
   }
@@ -549,11 +555,13 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
   // Trophies on a shelf by the inn door, one for each competition, and beside them a pamphlet
   // pinned to the wall: the write-up of the hackathons
   const inn = place('harbour');
-  const essay = (cv.writings || []).find(w => w.at === 'competitions');
+  if (inn) {
+  const honours = cv.interests.find(x => x.items), innStop = STOPS.find(s => s.kit === 'harbour');
+  const essay = honours && (cv.writings || []).find(w => w.at === `${innStop.id}:${honours.title}`);
   if (essay) {
     const onWall = (lx, ly, lz) => inn.point(lx, ly, 26 + lz);
     areas.build('trophies', b => b.group(at(inn.point(0, 0, 26).x, inn.site.y, inn.point(0, 0, 26).z, inn.rot), g => pamphlet(g, 7.15, 1.05, 4.53)), inn.site.y);
-    anchor(`writing:${essay.id}`, STOPS.findIndex(s => s.id === 'interests'), onWall(7.15, 1.4, 4.6), 2, onWall(6.3, 2.0, 8.2));
+    anchor(`writing:${essay.id}`, STOPS.indexOf(innStop), onWall(7.15, 1.4, 4.6), 2, onWall(6.3, 2.0, 8.2));
   }
   const wins = (cv.interests || []).find(i => i.items)?.items ?? [];
   areas.build('trophies', b => b.group(at(inn.point(0, 0, 26).x, inn.site.y, inn.point(0, 0, 26).z, inn.rot), g => {
@@ -576,7 +584,11 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
       }
     });
   }), inn.site.y);
+  }
 
+  let candle = null, flame = null, candleAt = null;
+  const fairPlace = place('fair');
+  if (fairPlace) {
   // A hackers' tent at the fair, three hunched over a table, a candle marked in hours burning down
   const ht0 = fair.point(20, 0, 16);
   areas.build('hackers', b => b.group(at(ht0.x, fair.site.y, ht0.z, fair.rot + 0.4), g => {
@@ -592,19 +604,21 @@ export function buildLore({ places, builder, people, birds, carts, banners, hera
     const p = ht0.clone().add(new Vector3(x, 0, 0.45).applyAxisAngle(UP, fair.rot + 0.4));
     people.add({ mode: MODE.work, a: p.setY(fair.site.y), heading: fair.rot + 0.4 + Math.PI, color: ['#2a2420', '#3f4f62', '#4f5a3a'][x > 0 ? 2 : x < 0 ? 0 : 1], accent: '#1c1a17', phase: x + 0.5 });
   }
-  const candleAt = ht0.clone().add(new Vector3(0.75, 0, -0.3).applyAxisAngle(UP, fair.rot + 0.4)).setY(fair.site.y + 0.86);
+  candleAt = ht0.clone().add(new Vector3(0.75, 0, -0.3).applyAxisAngle(UP, fair.rot + 0.4)).setY(fair.site.y + 0.86);
   const cb = new Builder();
   cb.groundY = fair.site.y;
   cb.cylinder(0.05, 0.42, 0, 0, 0, SURF.flat, '#efe6d3', 10);
   for (let k = 1; k < 8; k++) cb.cylinder(0.052, 0.008, 0, k * 0.052, 0, SURF.flat, '#8a2f2a', 10);
-  const candle = new Mesh(cb.build(), areas.material);
+  candle = new Mesh(cb.build(), areas.material);
   candle.position.copy(candleAt);
   const fb = new Builder();
   fb.blob(0.022, 0, 0.03, 0, SURF.glass, '#ffd27a', [1, 1.8, 1], 1);
-  const flame = new Mesh(fb.build(), areas.material);
+  flame = new Mesh(fb.build(), areas.material);
   meshes.push({ mesh: candle, points: [candleAt.clone()] }, { mesh: flame, points: [candleAt.clone()] });
   signs.add(ht0.clone().add(new Vector3(2.0, 0, 2.2).applyAxisAngle(UP, fair.rot + 0.4)).setY(fair.site.y + 1.45).add(new Vector3(-0.45, 0, 0).applyAxisAngle(UP, fair.rot + 0.4)), new Vector3(1, 0, 0).applyAxisAngle(UP, fair.rot + 0.4), '24 hours', true, 0.9);
+  }
   const update = t => {
+    if (!candle) return;
     const left = 1 - ((t / 300) % 1) * 0.85;
     candle.scale.y = left;
     flame.position.copy(candleAt).setY(candleAt.y + 0.42 * left);

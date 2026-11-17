@@ -11,7 +11,7 @@ import { readFile, writeFile, copyFile, access } from 'node:fs/promises';
 import { stdin, stdout, argv, exit } from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-import { SECTION_IDS, DEFAULT_SECTIONS, FLAG_PRESETS, fromJsonResume, serialise } from './lib.mjs';
+import { FLAG_PRESETS, fromJsonResume, serialise } from './lib.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const target = resolve(root, 'world.config.js');
@@ -79,7 +79,8 @@ if (resumePath) {
     const imported = fromJsonResume(JSON.parse(await readFile(resolve(process.cwd(), resumePath), 'utf8')));
     const fresh = await yes('Replace the current content (jobs, projects, skills...) with the imported résumé?', true);
     config = fresh ? { ...config, ...imported, person: { ...config.person, ...imported.person } } : { ...config, person: { ...config.person, ...imported.person } };
-    console.log(dim(`Imported ${imported.experience.length} jobs, ${imported.projects.length} projects, ${imported.skills.length} skill groups.`));
+    const count = id => imported.journey.find(s => s.id === id)?.content?.length ?? 0;
+    console.log(dim(`Imported ${count('experience')} jobs, ${count('projects')} projects, ${count('skills')} skill groups.`));
   } catch (e) {
     console.log(`Could not read that file (${e.message}); carrying on without it.`);
   }
@@ -101,17 +102,17 @@ if (!args.includes('--quick')) {
   config.site.description = await ask('Description for link previews:', config.site.description ?? '');
 
   heading('The journey');
-  console.log(dim('The watchtower welcome and the contact stop at the coast are always shown.'));
-  config.sections = config.sections ?? {};
+  console.log(dim('The first and last stops always stay. To add a stop of your own, run npm run new-stop.'));
+  config.journey = config.journey ?? [];
   const rename = await yes('Rename any stops?', false);
-  for (const id of SECTION_IDS) {
-    const s = config.sections[id] = { ...DEFAULT_SECTIONS[id], ...(config.sections[id] ?? {}) };
-    if (id !== 'contact') s.show = await yes(`  Show ${s.title} (${s.placeName})?`, s.show !== false);
+  const last = config.journey.length - 1;
+  for (const [i, s] of config.journey.entries()) {
+    if (i > 0 && i < last) s.show = await yes(`  Show ${s.title ?? s.id}${s.placeName ? ` (${s.placeName})` : ''}?`, s.show !== false);
     if (s.show === false) continue;
     delete s.show;
-    if (rename) {
-      s.title = await ask(`    Title for ${s.title}:`, s.title);
-      s.placeName = await ask('    Place name:', s.placeName);
+    if (rename && i > 0) {
+      s.title = await ask(`    Title for ${s.title ?? s.id}:`, s.title ?? s.id);
+      s.placeName = await ask('    Place name:', s.placeName ?? '');
     }
   }
 

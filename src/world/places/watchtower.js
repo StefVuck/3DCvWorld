@@ -44,5 +44,7 @@ export function build({ builder, banners, heraldry, cv }) {
     },
     detail: { radius: 90, count: 14000 },
     view: { pos: place.point(-22, 24, -18), look: place.point(70, 2, 30) },
+    // When it opens the journey: wide, over the tower and down the valley
+    welcomeView: { pos: place.point(-70, 16, 10), look: place.point(420, -40, 150), subject: place.point(0, 14, 0), frame: -0.3 },
   };
 }

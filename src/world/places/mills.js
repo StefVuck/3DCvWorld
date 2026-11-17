@@ -116,11 +116,12 @@ function workshop(b, project, i, r) {
   }
 }
 
-export function build({ builder, spinners, cv }) {
+export function build({ builder, spinners, cv, stop }) {
   const r = mulberry32(55);
   const wy = waterLevel(place.site.z) - place.site.y;
   const chimneys = [];
-  const projects = (cv.projects || []).slice(0, 6);
+  // The stop's content is a list of projects; the first six get a workshop
+  const projects = (Array.isArray(stop.content) ? stop.content : []).slice(0, 6);
 
   const shopAt = i => [-34 + i * 14, 16 - (i % 2) * 5];
   // Workshop-local (door side +z) to the place's frame; workshops are turned to face the road
@@ -142,7 +143,7 @@ export function build({ builder, spinners, cv }) {
   projects.forEach((p, i) => {
     const L = 8 + (i % 2) * 2;
     const [ax, az] = local(i, p.emblem === 'clock' ? -(L / 2 + 1.7) : p.emblem === 'orrery' ? -(L / 2 + 2) : 0, 2);
-    anchor(`project:${i}`, stopIndex('projects'), place.point(ax, p.emblem === 'clock' ? 6 : 3, az), 7, place.point(ax - 10, 9, az - 22));
+    anchor(`${stop.id}:${i}`, stopIndex(stop.id), place.point(ax, p.emblem === 'clock' ? 6 : 3, az), 7, place.point(ax - 10, 9, az - 22));
     if (p.emblem === 'clock') {
       const [cx, cz] = local(i, -(L / 2 + 1.7), 1.42);
       const c = place.point(cx, 7.6, cz);

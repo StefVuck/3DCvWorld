@@ -13,16 +13,17 @@ import { WORLD } from '../../world-config.js';
 
 const HABITS = ['#2e2824', '#3a302a', '#5e4c3a', '#d6cebd'];
 
-export function populate(people, birds) {
+// Folk for each built-in settlement, for those the journey uses
+export function populate(people, birds, active) {
   const r = mulberry32(909);
 
-  {
+  if (active.has('watchtower')) {
     const k = crowdKit(people, watchtower, r, birds);
     k.idle(-2.4, -1.7, Math.PI / 2, { y: 15.4, color: '#5a3a2e', accent: '#8a8a88' });
     k.walk([-14, 3], [-6, 8]);
   }
 
-  {
+  if (active.has('homestead')) {
     const k = crowdKit(people, homestead, r, birds);
     k.idle(11, 7, 0.4, { mode: MODE.work, color: '#7a4a32', accent: '#d8cdb4' });
     k.idle(15, 10, -2.2, { mode: MODE.work, color: '#4f5a3a', accent: '#c9b48a' });
@@ -31,7 +32,7 @@ export function populate(people, birds) {
     k.idle(-2.5, 1.25, 0, { y: 0.55, mode: MODE.work, color: '#3f4f62', accent: '#2a2420' });
   }
 
-  {
+  if (active.has('abbey')) {
     const k = crowdKit(people, abbey, r, birds);
     for (let i = 0; i < 7; i++) {
       k.walk([38, -1], [-6, -2], { speed: 0.8, phase: i * 0.06, color: HABITS[0], accent: HABITS[0] });
@@ -43,7 +44,7 @@ export function populate(people, birds) {
     birds.flock({ centre: abbey.point(-16.5, 0, -16), count: 12, radius: 16, height: 26, speed: 6, seed: 3 });
   }
 
-  {
+  if (active.has('town')) {
     const k = crowdKit(people, town, r, birds);
     const wy = waterLevel(town.site.z) - town.site.y;
     // The town crier rings his bell on the steps of the market cross, the crowd gathered to listen
@@ -120,7 +121,7 @@ export function populate(people, birds) {
     birds.flock({ centre: town.point(45, 0, -45), count: 10, radius: 22, height: 40, speed: 7, seed: 5 });
   }
 
-  {
+  if (active.has('fair')) {
     const k = crowdKit(people, fair, r, birds);
     k.circle(0, -6, 4.6, 8, { speed: 1.3, arms: 1, colors: ['#a8322d', '#efe6d3', '#2f5a8f', '#c9a13a'], accent: '#efe6d3' });
     for (const [x, z, ry, n] of STALLS) {
@@ -140,7 +141,7 @@ export function populate(people, birds) {
     birds.flock({ centre: fair.point(0, 0, -6), count: 8, radius: 26, height: 34, speed: 8, seed: 9 });
   }
 
-  {
+  if (active.has('mills')) {
     const k = crowdKit(people, mills, r, birds);
     for (let i = 0; i < 6; i++) k.idle(-34 + i * 14 + (r() - 0.5) * 3, 6.5 - (i % 2) * 0.5, 0, { mode: MODE.work });
     for (let i = 0; i < 5; i++) k.walk([-46 + r() * 20, 3 + r() * 2], [10 + r() * 40, 3 + r() * 2]);
@@ -151,7 +152,7 @@ export function populate(people, birds) {
     k.gather(-2, 30, 1, 3, 3);
   }
 
-  {
+  if (active.has('harbour')) {
     const k = crowdKit(people, harbour, r, birds);
     const wy = waterLevel(harbour.site.z) - harbour.site.y;
     // In the taproom: the innkeeper behind the bar, drinkers at it and round the tables

@@ -2,11 +2,12 @@
 // `npm run check`: reads world.config.js and points out anything that will not show up the way
 // you might expect. It never changes the file.
 
-import { access } from 'node:fs/promises';
+import { access, readdir } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { exit } from 'node:process';
 import { TRADES } from './lib.mjs';
+import { SITE_DEFAULTS, SEA } from '../src/journey/sites.js';
 
 const root = resolve(import.meta.dirname, '..');
 const path = resolve(root, 'world.config.js');
@@ -29,20 +30,54 @@ const flag = (name, f) => {
 };
 
 if (!config.person?.name) problems.push('person.name is empty');
-const jobs = config.experience ?? [], skills = config.skills ?? [], projects = config.projects ?? [];
-jobs.forEach((j, i) => { if (j.trade && !TRADES.job.includes(j.trade)) problems.push(`experience[${i}] (${j.org}): unknown trade "${j.trade}"; use one of ${TRADES.job.join(', ')}`); });
-skills.forEach((s, i) => { if (s.trade && !TRADES.skill.includes(s.trade)) problems.push(`skills[${i}] (${s.group}): unknown trade "${s.trade}"; use one of ${TRADES.skill.join(', ')}`); });
-projects.forEach((p, i) => { if (p.emblem && !TRADES.emblem.includes(p.emblem)) problems.push(`projects[${i}] (${p.name}): unknown emblem "${p.emblem}"; use one of ${TRADES.emblem.join(', ')}`); });
-if (jobs.length > 6) notes.push(`${jobs.length} jobs: all are listed, but only the first 6 get a guild hall`);
-if (skills.length > 8) notes.push(`${skills.length} skill groups: only the first 8 get a stall`);
-if (projects.length > 6) notes.push(`${projects.length} projects: all are listed, but only the first 6 get a workshop`);
-const codes = [...(config.travel?.visited ?? []), ...(config.travel?.wishlist ?? [])];
-const bad = codes.filter(c => !/^[A-Z]{2}$/.test(c));
-if (bad.length) problems.push(`travel: these are not two-letter country codes: ${bad.join(', ')}`);
-const targets = new Set(['competitions', ...skills.map(s => `skill:${s.group}`), ...jobs.map(j => `job:${j.role}`)]);
+
+// The journey: ids, place kits and panel layouts that exist, each settlement used once
+const kits = (await readdir(resolve(root, 'src/world/places'))).filter(f => f.endsWith('.js') && !['index.js', 'place.js', 'folk.js'].includes(f)).map(f => f.slice(0, -3));
+const layouts = (await readdir(resolve(root, 'src/panels'))).filter(f => f.endsWith('.js') && f !== 'kit.js').map(f => f.slice(0, -3));
+const journey = (config.journey ?? []).filter(s => s && s.show !== false);
+if (!journey.length) problems.push('the journey has no stops');
+const ids = new Set(), placesUsed = new Map(), entries = new Set();
+journey.forEach((s, i) => {
+  const name = `journey stop ${i + 1}${s.id ? ` ("${s.id}")` : ''}`;
+  if (!s.id || !/^[a-z][a-z0-9-]*$/.test(s.id)) problems.push(`${name}: needs an \`id\` of lower-case letters, digits and dashes`);
+  if (ids.has(s.id)) problems.push(`${name}: another stop has the same id`);
+  ids.add(s.id);
+  if (s.place && !kits.includes(s.place) && !SEA.has(s.place)) problems.push(`${name}: no place kit "${s.place}" (have ${[...kits, ...SEA].join(', ')})`);
+  if (s.place && !SEA.has(s.place)) {
+    if (placesUsed.has(s.place)) problems.push(`${name}: the place "${s.place}" is already used by "${placesUsed.get(s.place)}"`);
+    placesUsed.set(s.place, s.id);
+    if (!SITE_DEFAULTS[s.place] && !s.site) problems.push(`${name}: "${s.place}" is a new place, so it needs a \`site\` ({ z, offset, r })`);
+  }
+  if (!layouts.includes(s.panel ?? 'prose')) problems.push(`${name}: no panel layout "${s.panel}" (have ${layouts.join(', ')})`);
+  const list = Array.isArray(s.content) ? s.content : [];
+  // What the built-in place kits read, and how many of them get a building
+  if (s.place === 'town') {
+    list.forEach((j, k) => { if (j.trade && !TRADES.job.includes(j.trade)) problems.push(`${s.id}[${k}] (${j.org}): unknown trade "${j.trade}"; use one of ${TRADES.job.join(', ')}`); });
+    if (list.length > 6) notes.push(`${s.id}: ${list.length} jobs, but only the first 6 get a guild hall`);
+  }
+  if (s.place === 'fair') {
+    list.forEach((g, k) => { if (g.trade && !TRADES.skill.includes(g.trade)) problems.push(`${s.id}[${k}] (${g.group}): unknown trade "${g.trade}"; use one of ${TRADES.skill.join(', ')}`); });
+    if (list.length > 8) notes.push(`${s.id}: ${list.length} skill groups, but only the first 8 get a stall`);
+  }
+  if (s.place === 'mills') {
+    list.forEach((p, k) => { if (p.emblem && !TRADES.emblem.includes(p.emblem)) problems.push(`${s.id}[${k}] (${p.name}): unknown emblem "${p.emblem}"; use one of ${TRADES.emblem.join(', ')}`); });
+    if (list.length > 6) notes.push(`${s.id}: ${list.length} projects, but only the first 6 get a workshop`);
+  }
+  if (s.panel === 'globe' || s.place === 'ship') {
+    const codes = [...(s.content?.visited ?? []), ...(s.content?.wishlist ?? [])].filter(c => !/^[A-Z]{2}$/.test(c));
+    if (codes.length) problems.push(`${s.id}: these are not two-letter country codes: ${codes.join(', ')}`);
+  }
+  for (const e of list) for (const key of ['title', 'name', 'role', 'group']) if (e?.[key]) entries.add(`${s.id}:${e[key]}`);
+});
+// The settlements must not sit on top of one another
+const sites = journey.filter(s => s.place && !SEA.has(s.place)).map(s => ({ id: s.id, ...SITE_DEFAULTS[s.place], ...(s.site ?? {}) }));
+for (let i = 0; i < sites.length; i++) for (let k = i + 1; k < sites.length; k++) {
+  const a = sites[i], b = sites[k];
+  if (Math.hypot(a.z - b.z, a.offset - b.offset) < (a.r ?? 50) + (b.r ?? 50) + 120) problems.push(`"${a.id}" and "${b.id}" stand too close together; move one with \`site.z\` or \`site.offset\``);
+}
 (config.writings ?? []).forEach(w => {
   if (!w.at) notes.push(`writing "${w.title}" has no \`at\`, so it is not shown anywhere yet`);
-  else if (!targets.has(w.at)) problems.push(`writing "${w.title}": \`at\` is "${w.at}", which matches no competition list, skill group or job role`);
+  else if (!entries.has(w.at)) problems.push(`writing "${w.title}": \`at\` is "${w.at}", which matches no entry (use a stop's id, a colon and an entry's title, name, role or group)`);
 });
 const wld = config.world ?? {};
 for (const [k, f] of Object.entries(wld.flags ?? {})) flag(`world.flags.${k}`, f);

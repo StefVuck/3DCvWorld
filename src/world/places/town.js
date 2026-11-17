@@ -179,10 +179,11 @@ function guildHall(b, seed, trade, colour = '#8a2f2a') {
   b.box(11.2, 0.4, 1.6, 0, 2.6, 4.55, SURF.stone, '#d8d2c4');
 }
 
-export function build({ builder, banners, heraldry, spinners, cv }) {
+export function build({ builder, banners, heraldry, spinners, cv, stop }) {
   const r = mulberry32(21);
   const chimneys = [];
-  const halls = (cv.experience || []).slice(0, HALL_SLOTS.length);
+  // The stop's content is a list of jobs; each of the first six raises a guild hall
+  const halls = (Array.isArray(stop.content) ? stop.content : []).slice(0, HALL_SLOTS.length);
   const wy = waterLevel(place.site.z) - place.site.y;
 
   place.build(builder, b => {
@@ -201,7 +202,7 @@ export function build({ builder, banners, heraldry, spinners, cv }) {
       const [vx, vz] = [ry + 0.3, ry - 0.3].map(a => [x + Math.sin(a) * 20, z + Math.cos(a) * 20])
         .sort((p, q) => Math.hypot(...p) - Math.hypot(...q))[0];
       // Writing about a job is chalked on the blackboard out in front of its hall
-      const note = (cv.writings || []).find(w => w.at === `job:${job.role}`);
+      const note = (cv.writings || []).find(w => w.at === `${stop.id}:${job.role}`);
       if (note && job.trade === 'school') {
         b.group(at(x, 0, z, ry), g => g.group(at(3.0, 1.0, 7.53, 0, -0.2), c => {
           c.box(0.9, 0.07, 0.006, -0.1, 0.92, 0, SURF.flat, '#ecebe4');
@@ -210,9 +211,9 @@ export function build({ builder, banners, heraldry, spinners, cv }) {
           c.box(0.05, 0.05, 0.006, -0.62, 0.5, 0, SURF.flat, '#ecebe4');
         }));
         const hp = (lx, ly, lz) => place.point(x + lx * Math.cos(ry) + lz * Math.sin(ry), ly, z - lx * Math.sin(ry) + lz * Math.cos(ry));
-        anchor(`writing:${note.id}`, stopIndex('experience'), hp(3.0, 1.55, 7.5), 2.5, hp(4.2, 2.3, 11.4));
+        anchor(`writing:${note.id}`, stopIndex(stop.id), hp(3.0, 1.55, 7.5), 2.5, hp(4.2, 2.3, 11.4));
       }
-      anchor(`job:${i}`, stopIndex('experience'), place.point(x + Math.sin(ry) * (job.trade === 'exchange' ? 3 : 7.5), job.trade === 'exchange' ? 1.6 : 2.6, z + Math.cos(ry) * (job.trade === 'exchange' ? 3 : 7.5)), 9, place.point(vx, job.trade === 'exchange' ? 3.6 : 9, vz));
+      anchor(`${stop.id}:${i}`, stopIndex(stop.id), place.point(x + Math.sin(ry) * (job.trade === 'exchange' ? 3 : 7.5), job.trade === 'exchange' ? 1.6 : 2.6, z + Math.cos(ry) * (job.trade === 'exchange' ? 3 : 7.5)), 9, place.point(vx, job.trade === 'exchange' ? 3.6 : 9, vz));
       const along = place.dir(Math.cos(ry), -Math.sin(ry));
       const front = place.dir(Math.sin(ry), Math.cos(ry));
       for (const off of [-3, 3]) {

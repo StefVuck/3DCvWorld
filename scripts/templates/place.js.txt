@@ -1,0 +1,65 @@
+import { SURF, at } from '../kit.js';
+import { mulberry32 } from '../valley.js';
+import { Place } from './place.js';
+import { house, barrel, crate } from '../props.js';
+import { anchor } from '../links.js';
+import { crowdKit, MODE } from '../people.js';
+import { stopIndex } from '../../journey.js';
+
+// __TITLE__: a place kit made by `npm run new-stop`. It is yours to change: see docs/STOPS.md.
+//
+// Coordinates are in the place's own frame, in metres: the origin is the middle of its flat shelf,
+// x runs along the valley and +z faces the river. place.point(x, y, z) turns them into world
+// coordinates for anything outside the builder (anchors, people, camera views).
+export const place = new Place('__KIT__', __ROT__);
+
+export function build({ builder, people, birds, stop }) {
+  const r = mulberry32(__SEED__);
+  // This stop's content, from world.config.js. The panel layout reads the same thing.
+  const items = Array.isArray(stop.content) ? stop.content : [];
+  const at0 = stopIndex(stop.id);
+
+  place.build(builder, b => {
+    // A house at the back of the plot, facing the river
+    b.group(at(0, 0, -10), g => house(g, { L: 9, D: 6, floors: 2, seed: __SEED__, chimney: true }));
+    // A table for each entry, in a row in front of it. Each one is an anchor: the panel's visit
+    // buttons fly the camera here (the key is the stop's id, a colon and the entry's index).
+    items.slice(0, 6).forEach((item, i) => {
+      const x = -10 + i * 4;
+      b.box(1.8, 0.85, 0.9, x, 0, 4, SURF.plank, '#7a5a40');
+      if (i % 2) barrel(b, x + 1.3, 0, 3.2);
+      else crate(b, x - 1.2, 0, 3.4, r());
+      anchor(`${stop.id}:${i}`, at0, place.point(x, 1.2, 4), 4, place.point(x + 1.5, 3.2, 12));
+    });
+  });
+
+  // A few people about the place (people.tag groups them with it, so they are culled together)
+  const k = crowdKit(people, place, r, birds);
+  k.idle(-3, 7, Math.PI, { mode: MODE.conduct });
+  k.gather(0, 4, 3, 5, 4, { from: Math.PI * 0.6, span: Math.PI * 0.8 });
+  k.walk([-14, 9], [14, 9]);
+
+  return {
+    place,
+    chimneys: [],
+    // Trees to plant in addition to the forest: { x, z, scale, kind: 'broad' | 'conifer' }
+    extras: [],
+    // Ground painted under the place (R: trodden earth, G: tilled soil, B: settlement ground)
+    groundSize: 90,
+    paint: g => {
+      g.disc(0, 0, 30, 'rgb(0,0,255)', 8);
+      g.rect(-13, 1, 13, 8, 'rgb(170,0,0)', 3);
+      g.path([[0, 8], [0, 40]], 3);
+    },
+    // Grass and flowers scattered around it
+    detail: { radius: 80, count: 9000 },
+    // Where the camera stands, what it looks at, and what it keeps in frame on a phone
+    view: { pos: place.point(16, 12, 30), look: place.point(-2, 1.5, -2), subject: place.point(0, 3, 0) },
+  };
+}
+
+// Optional: who tells this stop on foot in walk mode. Without it, a local reads the panel's
+// text. h.at(x, z) is a point in this place's frame; h.add(position, name, lines) adds a teller.
+// export function speakers(stop, h) {
+//   h.add(h.at(-3, 7), 'The keeper', ['Welcome!', ...[].concat(stop.content ?? []).map(i => i.title)]);
+// }

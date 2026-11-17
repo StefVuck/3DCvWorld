@@ -1,0 +1,19 @@
+import { el, link, notes, visit } from './kit.js';
+
+// __TITLE__: a panel layout made by `npm run new-stop`. It is yours to change: see docs/STOPS.md.
+//
+// A layout is a function given the stop (with its `content` from world.config.js) and the cv
+// (your name and writings), returning the nodes that go on the panel under its place name and
+// title. This one expects content to be a list of { title, text, link }.
+export default function __NAME__(stop, cv) {
+  return [].concat(stop.content ?? []).map((item, i) => el('article', { class: 'entry', 'data-link': `${stop.id}:${i}` }, [
+    el('header', {}, [
+      el('h3', {}, link(item.link, item.title)),
+      // Flies to the anchor the place kit set for this entry; removed if there is none
+      visit('Visit'),
+    ]),
+    item.text ? el('p', { text: item.text }) : null,
+    // Margin notes for any writing whose `at` is this stop's id and the entry's title
+    ...notes(cv, `${stop.id}:${item.title}`),
+  ]));
+}
